@@ -20,4 +20,5 @@ go.work.sum
 # env file
 .env
 
-odd_even_megre_sort.py
+# supp files
+odd_even_merge_sort.py
