@@ -7,9 +7,11 @@ import (
 	"iter"
 	"network/utils"
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
 
-type IO[T comparable] struct{
+type IO[T constraints.Ordered] struct{
 	ctx context.Context
 	canc context.CancelFunc
 	key IOKey 
@@ -17,14 +19,14 @@ type IO[T comparable] struct{
 
 // Initalizes the IO module
 
-func Init[T comparable]() *IO[T] {
+func Init[T constraints.Ordered]() *IO[T] {
 	fmt.Println("Initializing IO")
 	newIO := &IO[T]{}
 	newIO.createContext(NewConfig("io"))
 	return newIO
 }
 
-func InitWithTimeOut[T comparable](timeOut time.Duration) *IO[T] {
+func InitWithTimeOut[T constraints.Ordered](timeOut time.Duration) *IO[T] {
 	fmt.Println("Initializing IO with timeout")
 	newIO := &IO[T]{}
 	cfg := NewConfig("io")

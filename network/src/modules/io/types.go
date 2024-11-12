@@ -5,6 +5,7 @@ import (
 	"iter"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/constraints"
 )
 
 // identifies an io stream
@@ -18,16 +19,25 @@ func NewIOKey(key string) *IOKey {
 	}
 }
 
-// wrapper for indexing items
-
-type IndexedItem[T comparable] struct{
+// Wrapper for indexing items
+type IndexedItem[T constraints.Ordered] struct{
 	Index uuid.UUID
 	Value T
 }
 
+// Implements the comparable interface
+func (item IndexedItem[T]) Compare(other IndexedItem[T]) int {
+	if item.Value > other.Value {
+		return 1
+	} else if item.Value < other.Value {
+		return -1
+	}
+	return 0
+}
 
 
-func NewIndexedItem[T comparable](value T) *IndexedItem[T] {
+
+func NewIndexedItem[T constraints.Ordered](value T) *IndexedItem[T] {
 	return &IndexedItem[T]{
 		Index: uuid.New(),
 		Value: value,
@@ -35,8 +45,10 @@ func NewIndexedItem[T comparable](value T) *IndexedItem[T] {
 }
 
 // prints indexed items
-func PrintIndexedItem[T comparable](items iter.Seq[IndexedItem[T]]) {
+func PrintIndexedItem[T constraints.Ordered](items iter.Seq[IndexedItem[T]]) {
+	buff := []IndexedItem[T]{}
 	for item := range items {
 		fmt.Println(item.Index, item.Value)
+		buff = append(buff, item)
 	}
 }
