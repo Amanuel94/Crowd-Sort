@@ -1,6 +1,7 @@
 package io
 
 import (
+	"context"
 	"fmt"
 	"iter"
 	"network/interfaces"
@@ -9,8 +10,14 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+type IO[T any] struct{
+	ctx context.Context
+	canc context.CancelFunc
+	key IOKey 
+}
+
 // identifies an io stream
-type IOKey struct {	
+type IOKey struct {
 	key string
 }
 
@@ -26,7 +33,7 @@ type IndexedItem[T any] struct {
 	Value interfaces.Comparable[T]
 }
 
-func  (item *IndexedItem[T]) GetValue() T {
+func (item *IndexedItem[T]) GetValue() T {
 	return item.Value.GetValue()
 }
 
@@ -41,7 +48,7 @@ func NewIndexedItem[T any](value interfaces.Comparable[T]) *IndexedItem[T] {
 	}
 }
 
-// Wrapper for constriants types
+// Wrapper for constrained types
 type OrderedType[T constraints.Ordered] struct {
 	Value T
 }
@@ -53,14 +60,14 @@ func (o *OrderedType[T]) GetValue() T {
 func (o *OrderedType[T]) Compare(other interfaces.Comparable[T]) int {
 	if o.Value < other.GetValue() {
 		return -1
-		} else if o.Value > other.GetValue() {
-			return 1
-		}
-		return 0
+	} else if o.Value > other.GetValue() {
+		return 1
+	}
+	return 0
 }
-	
-func NewInt64(value int64) interfaces.Comparable[int64] {
-	return &OrderedType[int64]{
+
+func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
+	return &OrderedType[T]{
 		Value: value,
 	}
 }

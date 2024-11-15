@@ -22,3 +22,6 @@ go.work.sum
 
 # supp files
 odd_even_merge_sort.py
+
+# markdown
+*.md
