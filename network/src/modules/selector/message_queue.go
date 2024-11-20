@@ -1,17 +1,17 @@
 package selector
 
 type queue[T any] struct{
-	q chan T	
+	q chan pair[T]	
 } 
 
 func NewQueue[T any]() *queue[T] {
-	return &queue[T]{q: make(chan T)}
+	return &queue[T]{q: make(chan pair[T])}
 }
 
-func (q *queue[T]) Enqueue(value T) {
+func (q *queue[T]) Enqueue(value pair[T]) {
 	q.q <- value
 }
 
-func (q *queue[T]) Dequeue() T {
+func (q *queue[T]) Dequeue() pair[T] {
 	return <-q.q
 }

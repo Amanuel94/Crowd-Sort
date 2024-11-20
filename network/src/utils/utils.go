@@ -1,7 +1,11 @@
+// utility functions
+
 package utils
 
 import (
 	"iter"
+
+	"golang.org/x/exp/rand"
 )
 
 // Map applies a function to each element of a sequence and returns a new sequence with the results.
@@ -37,4 +41,24 @@ func Concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
 			}
 		}
 	}
+}
+
+// bit count
+func Bit_count(x int) int {
+	count := 0
+	for x != 0 {
+		x &= x - 1
+		count++
+	}
+	return count
+}
+
+// next power of 2
+func NextPower(x int) int {
+	return 1 << (Bit_count(x) + 1)
+}
+
+// randint generates a random integer in the range [a, b].
+func RandInt(a, b int) int {
+    return rand.Intn(b-a+1) + a
 }
