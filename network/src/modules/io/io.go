@@ -5,7 +5,8 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"network/interfaces"
+	"network/shared"
+	"network/shared/interfaces"
 	"network/utils"
 	"time"
 )
@@ -39,9 +40,9 @@ func (io *IO[T]) createContext(cfg *Config) {
 	}
 }
 
-func (io *IO[T]) Read() iter.Seq[IndexedItem[T]] {
+func (io *IO[T]) Read() iter.Seq[shared.IndexedItem[T]] {
 	fmt.Println("Reading from IO")
-	return io.ctx.Value(io.key).(iter.Seq[IndexedItem[T]])
+	return io.ctx.Value(io.key).(iter.Seq[shared.IndexedItem[T]])
 }
 
 func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T]) {
@@ -50,13 +51,13 @@ func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T]) {
 }
 
 func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]]) {
-	indexedValues := utils.Map(func(v interfaces.Comparable[T]) IndexedItem[T] {return *NewIndexedItem(v)}, values)
-	if (io.ctx.Value(io.key) == nil) {
+	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] { return *shared.NewIndexedItem(v) }, values)
+	if io.ctx.Value(io.key) == nil {
 		fmt.Println("Writing to empty IO")
 		io.ctx = context.WithValue(io.ctx, io.key, indexedValues)
 	} else {
 		fmt.Println("Writing to non-empty IO")
-		curr := io.ctx.Value(io.key).(iter.Seq[IndexedItem[T]])
+		curr := io.ctx.Value(io.key).(iter.Seq[shared.IndexedItem[T]])
 		io.ctx = context.WithValue(io.ctx, io.key, utils.Concat(curr, indexedValues))
 	}
 	fmt.Println("Done writing")
@@ -73,8 +74,6 @@ func (io *IO[T]) Close() {
 
 func WriteInt(i *IO[int64], values []int64) {
 	asSeq := utils.SliceToSeq(values)
-	asComparable := utils.Map(func (v int64) interfaces.Comparable[int64] {return NewInt(v)}, asSeq)
+	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return NewInt(v) }, asSeq)
 	i.WriteFromSeq(asComparable)
 }
-
-

@@ -6,40 +6,52 @@ import (
 	"github.com/google/uuid"
 )
 
-type Node struct {
-	Index uuid.UUID
-	Neighbours []uuid.UUID
+type Node[T any] struct {
+	Value      pair[T]
+	Neighbours []Node[T]
+	Adj        int
 }
 
-type Graph struct {
-	Nodes []*Node
-	m map[uuid.UUID]*Node
+type Graph[T any] struct {
+	Nodes []*Node[T]
+	m     map[uuid.UUID]*Node[T]
 }
 
-func NewGraph() *Graph {
-	return &Graph{
-		Nodes: []*Node{},
-		m: make(map[uuid.UUID]*Node),
+func NewGraph[T any]() *Graph[T] {
+	return &Graph[T]{
+		Nodes: []*Node[T]{},
+		m:     make(map[uuid.UUID]*Node[T]),
 	}
 }
 
-func (g* Graph) AddNode(u uuid.UUID) {
-	n := &Node{
-		Index: u,
-		Neighbours: []uuid.UUID{},
+func (g *Graph[T]) AddNode(u pair[T]) {
+	n := &Node[T]{
+		Value:      u,
+		Neighbours: []Node[T]{},
 	}
 	g.Nodes = append(g.Nodes, n)
-	g.m[u] = n
+	g.m[u.id] = n
 }
 
-func (g* Graph) AddEdge(u uuid.UUID, v uuid.UUID) {
+func (g *Graph[T]) AddEdge(u pair[T], v pair[T]) {
 
-	nu, oku := g.m[u]
-	nv, okv := g.m[v]
+	nu, oku := g.m[u.id]
+	nv, okv := g.m[v.id]
 
-	argue(!oku, "Node u not found")
-	argue(!okv, "Node v not found")
+	if !oku {
+		g.AddNode(u)
+	}
+	if !okv {
+		g.AddNode(v)
+	}
 
-	nu.Neighbours = append(nu.Neighbours, u)
-	nv.Neighbours = append(nv.Neighbours, v)
+	for _, neighbour := range nu.Neighbours {
+		if neighbour.Value.id == v.id {
+			return
+		}
+	}
+	nu.Neighbours = append(nu.Neighbours, *nv)
+	nv.Neighbours = append(nv.Neighbours, *nu)
+	nu.Adj++
+	nv.Adj++
 }

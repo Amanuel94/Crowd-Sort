@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"network/interfaces"
+	"network/shared"
+	"network/shared/interfaces"
 
-	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 )
 
-type IO[T any] struct{
-	ctx context.Context
+type IO[T any] struct {
+	ctx  context.Context
 	canc context.CancelFunc
-	key IOKey 
+	key  IOKey
 }
 
 // identifies an io stream
@@ -27,30 +27,13 @@ func NewIOKey(key string) *IOKey {
 	}
 }
 
-// Wrapper for indexing items
-type IndexedItem[T any] struct {
-	Index uuid.UUID
-	Value interfaces.Comparable[T]
-}
-
-func (item *IndexedItem[T]) GetValue() T {
-	return item.Value.GetValue()
-}
-
-func (item *IndexedItem[T]) Compare(other *IndexedItem[T]) int {
-	return item.Value.Compare(other.Value)
-}
-
-func NewIndexedItem[T any](value interfaces.Comparable[T]) *IndexedItem[T] {
-	return &IndexedItem[T]{
-		Index: uuid.New(),
-		Value: value,
-	}
-}
-
 // Wrapper for constrained types
 type OrderedType[T constraints.Ordered] struct {
 	Value T
+}
+
+func (o *OrderedType[T]) GetIndex() any {
+	return o.Value
 }
 
 func (o *OrderedType[T]) GetValue() T {
@@ -73,8 +56,8 @@ func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 }
 
 // prints indexed items
-func PrintIndexedItem[T any](items iter.Seq[IndexedItem[T]]) {
-	buff := []IndexedItem[T]{}
+func PrintIndexedItem[T any](items iter.Seq[shared.IndexedItem[T]]) {
+	buff := []shared.IndexedItem[T]{}
 	for item := range items {
 		fmt.Println(item.Index, item.Value)
 		buff = append(buff, item)
