@@ -1,17 +1,37 @@
+// Generic queue implementation
 package selector
 
-type queue[T any] struct{
-	q chan pair[T]	
-} 
+type listNode[T any] struct {
+	value T
+	next  *listNode[T]
+}
+
+type queue[T any] struct {
+	head *listNode[T]
+	tail *listNode[T]
+	size int
+}
 
 func NewQueue[T any]() *queue[T] {
-	return &queue[T]{q: make(chan pair[T])}
+	head := &listNode[T]{}
+	tail := &listNode[T]{next: head}
+	head.next = tail
+	return &queue[T]{
+		head: head,
+		tail: tail,
+	}
 }
 
-func (q *queue[T]) Enqueue(value pair[T]) {
-	q.q <- value
+func (q *queue[T]) Enqueue(value T) {
+	node := &listNode[T]{value: value}
+	q.tail.next.next = node
+	q.tail.next = node
+	q.size++
 }
 
-func (q *queue[T]) Dequeue() pair[T] {
-	return <-q.q
+func (q *queue[T]) Dequeue() T {
+	argue(q.size > 0, "Empty queue")
+	node := q.head.next
+	q.head.next = node.next
+	return node.value
 }

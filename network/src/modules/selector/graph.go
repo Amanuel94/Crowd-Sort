@@ -24,13 +24,14 @@ func NewGraph[T any]() *Graph[T] {
 	}
 }
 
-func (g *Graph[T]) AddNode(u pair[T]) {
+func (g *Graph[T]) AddNode(u pair[T]) *Node[T] {
 	n := &Node[T]{
 		Value:      u,
 		Neighbours: []Node[T]{},
 	}
 	g.Nodes = append(g.Nodes, n)
 	g.m[u.id] = n
+	return n
 }
 
 func (g *Graph[T]) AddEdge(u pair[T], v pair[T]) {
@@ -39,12 +40,11 @@ func (g *Graph[T]) AddEdge(u pair[T], v pair[T]) {
 	nv, okv := g.m[v.id]
 
 	if !oku {
-		g.AddNode(u)
+		nu = g.AddNode(u)
 	}
 	if !okv {
-		g.AddNode(v)
+		nv = g.AddNode(v)
 	}
-
 	for _, neighbour := range nu.Neighbours {
 		if neighbour.Value.id == v.id {
 			return

@@ -51,7 +51,9 @@ func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T]) {
 }
 
 func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]]) {
-	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] { return *shared.NewIndexedItem(v) }, values)
+	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] {
+		return shared.NewIndexedItem(v).(shared.IndexedItem[T])
+	}, values)
 	if io.ctx.Value(io.key) == nil {
 		fmt.Println("Writing to empty IO")
 		io.ctx = context.WithValue(io.ctx, io.key, indexedValues)
@@ -74,6 +76,6 @@ func (io *IO[T]) Close() {
 
 func WriteInt(i *IO[int64], values []int64) {
 	asSeq := utils.SliceToSeq(values)
-	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return NewInt(v) }, asSeq)
+	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return shared.NewInt(v) }, asSeq)
 	i.WriteFromSeq(asComparable)
 }
