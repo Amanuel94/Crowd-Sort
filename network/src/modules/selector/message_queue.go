@@ -33,5 +33,11 @@ func (q *queue[T]) Dequeue() T {
 	argue(q.size > 0, "Empty queue")
 	node := q.head.next
 	q.head.next = node.next
+	q.size--
+
+	if q.tail.next == node {
+		q.tail.next = q.head
+	}
+
 	return node.value
 }

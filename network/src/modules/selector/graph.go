@@ -7,8 +7,8 @@ import (
 )
 
 type Node[T any] struct {
-	Value      pair[T]
-	Neighbours []Node[T]
+	Value      *pair[T]
+	Neighbours []*Node[T]
 	Adj        int
 }
 
@@ -24,34 +24,34 @@ func NewGraph[T any]() *Graph[T] {
 	}
 }
 
-func (g *Graph[T]) AddNode(u pair[T]) *Node[T] {
+func (g *Graph[T]) AddNode(u *pair[T]) *Node[T] {
 	n := &Node[T]{
 		Value:      u,
-		Neighbours: []Node[T]{},
+		Neighbours: []*Node[T]{},
 	}
 	g.Nodes = append(g.Nodes, n)
 	g.m[u.id] = n
 	return n
 }
 
-func (g *Graph[T]) AddEdge(u pair[T], v pair[T]) {
+func (g *Graph[T]) AddEdge(src_id uuid.UUID, dest_id uuid.UUID) {
 
-	nu, oku := g.m[u.id]
-	nv, okv := g.m[v.id]
+	nsrc, oku := g.m[src_id]
+	ndest, okv := g.m[dest_id]
 
-	if !oku {
-		nu = g.AddNode(u)
-	}
-	if !okv {
-		nv = g.AddNode(v)
-	}
-	for _, neighbour := range nu.Neighbours {
-		if neighbour.Value.id == v.id {
+	// if !oku {
+	// 	nsrc = g.AddNode(src)
+	// }
+	// if !okv {
+	// 	ndest = g.AddNode(dest)
+	// }
+
+	argue(oku && okv, "Nodes not found")
+	for _, neighbour := range nsrc.Neighbours {
+		if neighbour.Value.id == dest_id {
 			return
 		}
 	}
-	nu.Neighbours = append(nu.Neighbours, *nv)
-	nv.Neighbours = append(nv.Neighbours, *nu)
-	nu.Adj++
-	nv.Adj++
+	nsrc.Neighbours = append(nsrc.Neighbours, ndest)
+	ndest.Adj++
 }
