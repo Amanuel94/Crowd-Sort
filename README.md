@@ -1,4 +1,4 @@
-# CrowdSort - Sorting Network Implementation using Go (In Development)
+# CrowdSort - Sorting Network Implementation using Go (Under Development)
 
 ## Architecture
 
