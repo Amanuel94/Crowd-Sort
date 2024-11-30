@@ -32,14 +32,14 @@ func TestSelector(t *testing.T) {
 	p, ok := s.Batch()
 
 	for ok {
-		i, j := p.f.GetIndex().(uuid.UUID), p.s.GetIndex().(uuid.UUID)
+		i, j := p.F.GetIndex().(uuid.UUID), p.S.GetIndex().(uuid.UUID)
 		pi := u[m[i]]
 		pj := u[m[j]]
 
 		if pi.Compare(pj) > 0 {
 			u[m[i]], u[m[j]] = u[m[j]], u[m[i]]
 		}
-		s.PrepareNeighbours(p.id)
+		s.PrepareNeighbours(p.Id)
 		p, ok = s.Batch()
 	}
 

@@ -8,26 +8,26 @@ import (
 	"github.com/google/uuid"
 )
 
-type selector[T any] struct {
+type Selector[T any] struct {
 	g *Graph[T]
-	q *queue[*pair[T]]
+	q *queue[*shared.Pair[T]]
 	// leaves  *queue[Node[T]]
 	alg     string
 	batched bool
 }
 
 // TODO: Implement bitonic sort and shell sort
-func NewSelector[T any](cfg Config) *selector[T] {
+func NewSelector[T any](cfg Config) *Selector[T] {
 	argue(cfg.alg == "BEMS", "Invalid algorithm name")
-	return &selector[T]{
+	return &Selector[T]{
 		g:       NewGraph[T](),
-		q:       NewQueue[*pair[T]](),
+		q:       NewQueue[*shared.Pair[T]](),
 		alg:     cfg.alg,
 		batched: false,
 	}
 }
 
-func (s *selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
+func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 	argue(len(u) > 0, "Empty input")
 	dummyInstance := shared.IndexedItem[T]{}
@@ -42,35 +42,35 @@ func (s *selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 		if i >= n_nodes || j >= n_nodes {
 			continue
 		}
-		pair := NewPair(u[i], u[j])
+		pair := shared.NewPair(u[i], u[j])
 		s.g.AddNode(pair)
 
-		fprev, fok := pmap[pair.f.GetIndex().(uuid.UUID)]
-		sprev, sok := pmap[pair.s.GetIndex().(uuid.UUID)]
+		fprev, fok := pmap[pair.F.GetIndex().(uuid.UUID)]
+		sprev, sok := pmap[pair.S.GetIndex().(uuid.UUID)]
 		if fok {
-			s.g.AddEdge(fprev, pair.id)
+			s.g.AddEdge(fprev, pair.Id)
 		}
 		if sok {
-			s.g.AddEdge(sprev, pair.id)
+			s.g.AddEdge(sprev, pair.Id)
 		}
-		pmap[pair.f.GetIndex().(uuid.UUID)] = pair.id
-		pmap[pair.s.GetIndex().(uuid.UUID)] = pair.id
+		pmap[pair.F.GetIndex().(uuid.UUID)] = pair.Id
+		pmap[pair.S.GetIndex().(uuid.UUID)] = pair.Id
 	}
 }
 
-func (s *selector[T]) Batch() (*pair[T], bool) {
+func (s *Selector[T]) Batch() (*shared.Pair[T], bool) {
 
 	if !s.batched {
 		s.firstBatch()
 		s.batched = true
 	}
 	if s.q.size == 0 {
-		return &pair[T]{}, false
+		return &shared.Pair[T]{}, false
 	}
 	return s.q.Dequeue(), true
 }
 
-func (s *selector[T]) PrepareNeighbours(id uuid.UUID) {
+func (s *Selector[T]) PrepareNeighbours(id uuid.UUID) {
 	node, ok := s.g.m[id]
 	argue(ok, "Node not found")
 	for _, neighbour := range node.Neighbours {
@@ -81,7 +81,7 @@ func (s *selector[T]) PrepareNeighbours(id uuid.UUID) {
 	}
 }
 
-func (s *selector[T]) firstBatch() {
+func (s *Selector[T]) firstBatch() {
 
 	for _, node := range s.g.Nodes {
 		if node.Adj == 0 {

@@ -3,11 +3,13 @@
 package selector
 
 import (
+	"network/shared"
+
 	"github.com/google/uuid"
 )
 
 type Node[T any] struct {
-	Value      *pair[T]
+	Value      *shared.Pair[T]
 	Neighbours []*Node[T]
 	Adj        int
 }
@@ -24,13 +26,13 @@ func NewGraph[T any]() *Graph[T] {
 	}
 }
 
-func (g *Graph[T]) AddNode(u *pair[T]) *Node[T] {
+func (g *Graph[T]) AddNode(u *shared.Pair[T]) *Node[T] {
 	n := &Node[T]{
 		Value:      u,
 		Neighbours: []*Node[T]{},
 	}
 	g.Nodes = append(g.Nodes, n)
-	g.m[u.id] = n
+	g.m[u.Id] = n
 	return n
 }
 
@@ -39,16 +41,9 @@ func (g *Graph[T]) AddEdge(src_id uuid.UUID, dest_id uuid.UUID) {
 	nsrc, oku := g.m[src_id]
 	ndest, okv := g.m[dest_id]
 
-	// if !oku {
-	// 	nsrc = g.AddNode(src)
-	// }
-	// if !okv {
-	// 	ndest = g.AddNode(dest)
-	// }
-
 	argue(oku && okv, "Nodes not found")
 	for _, neighbour := range nsrc.Neighbours {
-		if neighbour.Value.id == dest_id {
+		if neighbour.Value.Id == dest_id {
 			return
 		}
 	}
