@@ -6,7 +6,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		alg: "BEMS",
+		alg: "BEMS", // batcher even-odd-merge sort
 	}
 }
 

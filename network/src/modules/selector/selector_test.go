@@ -29,7 +29,7 @@ func TestSelector(t *testing.T) {
 	cfg := NewConfig()
 	s := NewSelector[int](*cfg)
 	s.CreateGraph(u)
-	p, ok := s.Batch()
+	p, ok := s.Next()
 
 	for ok {
 		i, j := p.F.GetIndex().(uuid.UUID), p.S.GetIndex().(uuid.UUID)
@@ -40,7 +40,7 @@ func TestSelector(t *testing.T) {
 			u[m[i]], u[m[j]] = u[m[j]], u[m[i]]
 		}
 		s.PrepareNeighbours(p.Id)
-		p, ok = s.Batch()
+		p, ok = s.Next()
 	}
 
 	// check if u is sorted

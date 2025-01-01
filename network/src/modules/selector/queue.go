@@ -1,4 +1,4 @@
-// Generic queue implementation
+// Generic queue implementation with linked-list
 package selector
 
 type listNode[T any] struct {

@@ -58,7 +58,7 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 	}
 }
 
-func (s *Selector[T]) Batch() (*shared.Pair[T], bool) {
+func (s *Selector[T]) Next() (*shared.Pair[T], bool) {
 
 	if !s.batched {
 		s.firstBatch()
@@ -70,6 +70,7 @@ func (s *Selector[T]) Batch() (*shared.Pair[T], bool) {
 	return s.q.Dequeue(), true
 }
 
+// Enqueue pairs with 0 dependencies
 func (s *Selector[T]) PrepareNeighbours(id uuid.UUID) {
 	node, ok := s.g.m[id]
 	argue(ok, "Node not found")

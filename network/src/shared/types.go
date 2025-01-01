@@ -9,7 +9,7 @@ import (
 
 // Wrapper for indexing items
 type IndexedItem[T any] struct {
-	Index uuid.UUID
+	Index uuid.UUID // primary key
 	Value interfaces.Comparable[T]
 }
 
