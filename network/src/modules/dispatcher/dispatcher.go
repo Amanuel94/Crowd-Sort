@@ -1,9 +1,12 @@
 package dispatcher
 
 import (
+	"context"
 	"network/modules/selector"
 	"network/shared"
 	"sync"
+
+	"github.com/cenkalti/backoff/v5"
 )
 
 // Batches from Selector
@@ -12,12 +15,13 @@ import (
 // Maintains Leaderboard
 
 type Dispatcher[T any] struct {
-	s           *selector.Selector[T]
-	lb          []any
-	n_workers   int
-	task_limit  int
-	worker_pool []Process[T]
-	task_pq     []int
+	s               *selector.Selector[T]
+	lb              []any
+	n_workers       int
+	n_tasks         int
+	task_limit      int
+	worker_pool     []*pq[T]
+	tasks_completed int
 }
 
 func NewDispatcher[T any](s *selector.Selector[T]) *Dispatcher[T] {
@@ -35,14 +39,22 @@ func (d *Dispatcher[T]) worker(wg *sync.WaitGroup, process Process[T], pair shar
 
 func (d *Dispatcher[T]) Dispatch() {
 
-	wg := sync.WaitGroup{}
-	for {
-		pair, ok := d.s.Next()
+	get_ready_result := func() (*shared.Pair[T], error) {
+		res, ok := d.s.Next()
 		if !ok {
+			return nil, argue(ok, "No ready tasks")
+		}
+		return res, nil
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(d.n_tasks)
+	task_cnt := 0
+	for task_cnt < d.n_tasks {
+		pair, err := backoff.Retry(context.TODO(), get_ready_result)
+		if err != nil {
 			break
 		}
-		wg.Add(1)
-		go d.worker(&wg, process, pair)
 	}
 	wg.Wait()
 

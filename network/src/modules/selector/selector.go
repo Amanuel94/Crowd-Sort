@@ -27,6 +27,10 @@ func NewSelector[T any](cfg Config) *Selector[T] {
 	}
 }
 
+func (s *Selector[T]) NPairs() int {
+	return len(s.g.Nodes)
+}
+
 func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 	argue(len(u) > 0, "Empty input")
