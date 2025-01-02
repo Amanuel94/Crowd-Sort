@@ -1,10 +1,14 @@
 package dispatcher
 
-import "network/shared/interfaces"
+import (
+	"network/shared"
+	"network/shared/interfaces"
+)
 
-type Process[T any] interface {
+type IProcess[T any] interface {
 	GetIndex() any
-	CompareEntries(interfaces.Comparable[T], interfaces.Comparable[T])
+	CompareEntries(interfaces.Comparable[T], interfaces.Comparable[T]) (shared.Ord, error)
+	Assigned()
 	TaskCount() int
 }
 
