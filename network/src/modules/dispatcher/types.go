@@ -1,10 +1,12 @@
 package dispatcher
 
-type Process interface {
-	CompareEntries(interface{}, interface{})
+import "network/shared/interfaces"
+
+type Process[T any] interface {
+	GetIndex() any
+	CompareEntries(interfaces.Comparable[T], interfaces.Comparable[T])
+	TaskCount() int
 }
 
-type Leaderboard struct {
-	Entries []interface{}
-	Rank    []int
-}
+// for live standings
+// TODO: Implement live prodcast
