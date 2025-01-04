@@ -12,6 +12,14 @@ func NewPQ[T any]() *pq[T] {
 	}
 }
 
+func FromList[T any](processes []*IProcess[T]) *pq[T] {
+
+	return &pq[T]{
+		pq: processes,
+	}
+
+}
+
 func (p *pq[T]) Push(item *IProcess[T]) {
 	p.pq = append(p.pq, item)
 	for i := len(p.pq) - 1; i > 0; {
