@@ -16,20 +16,20 @@ import (
 func Init[T any]() *IO[T] {
 	fmt.Println("Initializing IO")
 	newIO := &IO[T]{}
-	newIO.createContext(NewConfig[T]("io"))
+	newIO.createContext(NewConfig("io"))
 	return newIO
 }
 
 func InitWithTimeOut[T any](timeOut time.Duration) *IO[T] {
 	fmt.Println("Initializing IO with timeout")
 	newIO := &IO[T]{}
-	cfg := NewConfig[T]("io")
+	cfg := NewConfig("io")
 	cfg.WithTimeout(timeOut)
 	newIO.createContext(cfg)
 	return newIO
 }
 
-func (io *IO[T]) createContext(cfg *Config[T]) {
+func (io *IO[T]) createContext(cfg *Config) {
 
 	io.key = *NewIOKey(cfg.key)
 	if cfg.withTimeout {

@@ -16,7 +16,7 @@ type DispatcherConfig[T any] struct {
 	channel  chan *shared.Pair[T]
 }
 
-func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*IProcess[T]) *DispatcherConfig[T] {
+func IndexedDispatcherConfig[T any](s *selector.Selector[T], items []*shared.IndexedItem[T], tasks_limit int, processes []*IProcess[T]) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)
@@ -26,21 +26,16 @@ func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []
 	}
 
 	pq := FromList(processes)
-	scfg := selector.NewConfig()
 
 	return &DispatcherConfig[T]{
-		s:        selector.NewSelector[T](*scfg),
+		s:        s,
 		lb:       lb,
 		n:        len(lb),
-		cpw:      len(lb) / len(processes),
+		cpw:      tasks_limit,
 		pool:     pq,
 		tcounter: 0,
 		rank:     rank,
 		channel:  make(chan *shared.Pair[T]),
 	}
 
-}
-
-func WithTaskLimit[T any](cfg *DispatcherConfig[T], limit int) {
-	cfg.cpw = limit
 }
