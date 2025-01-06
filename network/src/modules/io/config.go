@@ -1,21 +1,28 @@
 package io
 
-import "time"
+import (
+	"network/modules/dispatcher"
+	"time"
+)
 
-type Config struct {
+type Config[T any] struct {
 	withTimeout bool
-	timeOut time.Duration
-	key string
+	timeOut     time.Duration
+	key         string
+	d           *dispatcher.Dispatcher[T]
 }
 
+func NewConfig[T any](key string) *Config[T] {
 
-func NewConfig(key string) *Config {
-	return &Config{
-		key: key,
+	return &Config[T]{
+		key:         key,
+		withTimeout: false,
+		timeOut:     0,
+		d:           nil,
 	}
 }
 
-func (cfg *Config) WithTimeout(timeOut time.Duration) {
+func (cfg *Config[T]) WithTimeout(timeOut time.Duration) {
 	cfg.withTimeout = true
 	cfg.timeOut = timeOut
 }
