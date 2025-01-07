@@ -83,3 +83,12 @@ type Pair[T any] struct {
 func NewPair[T any](f interfaces.Comparable[T], s interfaces.Comparable[T]) *Pair[T] {
 	return &Pair[T]{Id: uuid.New(), F: f, S: s, Order: NA}
 }
+
+// wrapper for  comparator modules
+
+type Comparator[T any] interface {
+	GetIndex() any
+	CompareEntries(*Pair[T]) error
+	Assigned()
+	TaskCount() int
+}

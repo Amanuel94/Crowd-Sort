@@ -39,7 +39,7 @@ func NewDispatcher[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	}
 }
 
-func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, process *IProcess[T], pair *shared.Pair[T]) {
+func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, process *shared.Comparator[T], pair *shared.Pair[T]) {
 	defer wg.Done()
 	err := (*process).CompareEntries(pair)
 

@@ -10,5 +10,5 @@ type IO[T any] struct {
 }
 
 type IOKey struct {
-	key string
+	Key string
 }

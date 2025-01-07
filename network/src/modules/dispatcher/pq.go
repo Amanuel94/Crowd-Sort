@@ -1,18 +1,19 @@
-// heap implementation for Iprocess management
-
+// heap implementation for (shared.Comparator management
 package dispatcher
 
+import "network/shared"
+
 type pq[T any] struct {
-	pq []*IProcess[T]
+	pq []*(shared.Comparator[T])
 }
 
 func NewPQ[T any]() *pq[T] {
 	return &pq[T]{
-		pq: make([]*IProcess[T], 0),
+		pq: make([]*(shared.Comparator[T]), 0),
 	}
 }
 
-func FromList[T any](processes []*IProcess[T]) *pq[T] {
+func FromList[T any](processes []*(shared.Comparator[T])) *pq[T] {
 
 	return &pq[T]{
 		pq: processes,
@@ -20,7 +21,7 @@ func FromList[T any](processes []*IProcess[T]) *pq[T] {
 
 }
 
-func (p *pq[T]) Push(item *IProcess[T]) {
+func (p *pq[T]) Push(item *(shared.Comparator[T])) {
 	p.pq = append(p.pq, item)
 	for i := len(p.pq) - 1; i > 0; {
 
@@ -33,7 +34,7 @@ func (p *pq[T]) Push(item *IProcess[T]) {
 	}
 }
 
-func (p *pq[T]) Pop() *IProcess[T] {
+func (p *pq[T]) Pop() *(shared.Comparator[T]) {
 	if len(p.pq) == 0 {
 		return nil
 	}

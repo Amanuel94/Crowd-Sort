@@ -16,7 +16,7 @@ type DispatcherConfig[T any] struct {
 	channel  chan *shared.Pair[T]
 }
 
-func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*IProcess[T]) *DispatcherConfig[T] {
+func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*(shared.Comparator[T])) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)
