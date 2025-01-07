@@ -1,6 +1,7 @@
 package dispatcher
 
 import (
+	"network/interfaces"
 	"network/modules/selector"
 	"network/shared"
 )
@@ -16,7 +17,7 @@ type DispatcherConfig[T any] struct {
 	channel  chan *shared.Pair[T]
 }
 
-func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*(shared.Comparator[T])) *DispatcherConfig[T] {
+func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*(interfaces.Comparator[T])) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)

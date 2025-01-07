@@ -1,8 +1,8 @@
 package selector
 
 import (
+	"network/interfaces"
 	"network/shared"
-	"network/shared/interfaces"
 	"network/utils"
 
 	"testing"
@@ -17,7 +17,7 @@ func TestSelector(t *testing.T) {
 	size := utils.RandInt(2, 100)
 	for i := 0; i < size; i++ {
 		num := shared.NewInt(utils.RandInt(0, 100))
-		u = append(u, shared.NewIndexedItem(num).(shared.IndexedItem[int]))
+		u = append(u, shared.NewIndexedItem[int](num))
 	}
 
 	m := make(map[uuid.UUID]int)

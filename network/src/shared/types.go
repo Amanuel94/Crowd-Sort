@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"network/shared/interfaces"
+	"network/interfaces"
 
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
@@ -11,6 +11,13 @@ import (
 type IndexedItem[T any] struct {
 	Index uuid.UUID // primary key
 	Value interfaces.Comparable[T]
+}
+
+func NewIndexedItem[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
+	return IndexedItem[T]{
+		Index: uuid.New(),
+		Value: value,
+	}
 }
 
 func (item IndexedItem[T]) GetIndex() any {
@@ -23,13 +30,6 @@ func (item IndexedItem[T]) GetValue() T {
 
 func (item IndexedItem[T]) Compare(other interfaces.Comparable[T]) int {
 	return item.Value.Compare(other)
-}
-
-func NewIndexedItem[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
-	return IndexedItem[T]{
-		Index: uuid.New(),
-		Value: value,
-	}
 }
 
 // Wrapper for constrained types
@@ -82,13 +82,4 @@ type Pair[T any] struct {
 
 func NewPair[T any](f interfaces.Comparable[T], s interfaces.Comparable[T]) *Pair[T] {
 	return &Pair[T]{Id: uuid.New(), F: f, S: s, Order: NA}
-}
-
-// wrapper for  comparator modules
-
-type Comparator[T any] interface {
-	GetIndex() any
-	CompareEntries(*Pair[T]) error
-	Assigned()
-	TaskCount() int
 }

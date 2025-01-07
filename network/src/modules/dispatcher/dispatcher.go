@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"context"
 	"fmt"
+	"network/interfaces"
 	"network/modules/selector"
 	"network/shared"
 	"sync"
@@ -39,11 +40,19 @@ func NewDispatcher[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	}
 }
 
-func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, process *shared.Comparator[T], pair *shared.Pair[T]) {
+func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, process *interfaces.Comparator[T], pair *shared.Pair[T]) {
 	defer wg.Done()
-	err := (*process).CompareEntries(pair)
+	val, err := (*process).CompareEntries(&pair.F, &pair.S)
 
 	argue(err == nil, err.Error())
+	switch val {
+	case 1: // F > S
+		pair.Order = shared.GT
+	case -1: // F < S
+		pair.Order = shared.LT
+	case 0: // F == S
+		pair.Order = shared.EQ
+	}
 
 	d.channel <- pair
 	d.s.PrepareNeighbours(pair.Id)

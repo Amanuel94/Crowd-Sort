@@ -1,8 +1,8 @@
 package selector
 
 import (
+	"network/interfaces"
 	"network/shared"
-	"network/shared/interfaces"
 	"reflect"
 
 	"github.com/google/uuid"
@@ -46,7 +46,7 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 		if i >= n_nodes || j >= n_nodes {
 			continue
 		}
-		pair := shared.NewPair(u[i], u[j])
+		pair := shared.NewPair[T](u[i], u[j])
 		s.g.AddNode(pair)
 
 		fprev, fok := pmap[pair.F.GetIndex().(uuid.UUID)]

@@ -6,3 +6,12 @@ type Comparable[T any] interface {
 	GetValue() T
 	Compare(other Comparable[T]) int
 }
+
+// wrapper for  comparator modules
+
+type Comparator[T any] interface {
+	GetIndex() any
+	CompareEntries(*Comparable[T], *Comparable[T]) (int, error)
+	Assigned()
+	TaskCount() int
+}

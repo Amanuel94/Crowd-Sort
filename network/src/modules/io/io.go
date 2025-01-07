@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 	"iter"
+	"network/interfaces"
 	"network/shared"
-	"network/shared/interfaces"
 	"network/utils"
 )
 
@@ -31,7 +31,7 @@ func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T], key IOKey) {
 
 func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]], key IOKey) {
 	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] {
-		return shared.NewIndexedItem(v).(shared.IndexedItem[T])
+		return shared.NewIndexedItem[T](v).(shared.IndexedItem[T])
 	}, values)
 	if io.ctx.Value(key) == nil {
 		fmt.Println("Writing to empty IO")
