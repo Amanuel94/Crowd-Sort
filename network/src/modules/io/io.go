@@ -8,65 +8,44 @@ import (
 	"network/shared"
 	"network/shared/interfaces"
 	"network/utils"
-	"time"
 )
 
 // Initalizes the IO module
 
-func Init[T any]() *IO[T] {
+func Init[T any](cfg *Config[T]) *IO[T] {
 	fmt.Println("Initializing IO")
 	newIO := &IO[T]{}
-	newIO.createContext(NewConfig[T]("io"))
+	newIO.ctx = *cfg.ctx
+	newIO.canc = *cfg.canc
 	return newIO
 }
-
-func InitWithTimeOut[T any](timeOut time.Duration) *IO[T] {
-	fmt.Println("Initializing IO with timeout")
-	newIO := &IO[T]{}
-	cfg := NewConfig[T]("io")
-	cfg.WithTimeout(timeOut)
-	newIO.createContext(cfg)
-	return newIO
+func (io *IO[T]) ReadItems(key IOKey) iter.Seq[shared.IndexedItem[T]] {
+	fmt.Println("Reading Values from IO-Context")
+	return io.ctx.Value(key).(iter.Seq[shared.IndexedItem[T]])
 }
 
-func (io *IO[T]) createContext(cfg *Config[T]) {
-
-	io.key = *NewIOKey(cfg.key)
-	if cfg.withTimeout {
-		io.ctx, io.canc = context.WithTimeout(context.Background(), cfg.timeOut)
-	} else {
-		io.ctx = context.Background()
-		io.canc = func() {}
-	}
-}
-
-func (io *IO[T]) Read() iter.Seq[shared.IndexedItem[T]] {
-	fmt.Println("Reading from IO")
-	return io.ctx.Value(io.key).(iter.Seq[shared.IndexedItem[T]])
-}
-
-func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T]) {
+func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T], key IOKey) {
 	asSeq := utils.SliceToSeq(values)
-	io.WriteFromSeq(asSeq)
+	io.WriteFromSeq(asSeq, key)
 }
 
-func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]]) {
+func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]], key IOKey) {
 	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] {
 		return shared.NewIndexedItem(v).(shared.IndexedItem[T])
 	}, values)
-	if io.ctx.Value(io.key) == nil {
+	if io.ctx.Value(key) == nil {
 		fmt.Println("Writing to empty IO")
-		io.ctx = context.WithValue(io.ctx, io.key, indexedValues)
+		io.ctx = context.WithValue(io.ctx, key, indexedValues)
 	} else {
 		fmt.Println("Writing to non-empty IO")
-		curr := io.ctx.Value(io.key).(iter.Seq[shared.IndexedItem[T]])
-		io.ctx = context.WithValue(io.ctx, io.key, utils.Concat(curr, indexedValues))
+		curr := io.ctx.Value(key).(iter.Seq[shared.IndexedItem[T]])
+		io.ctx = context.WithValue(io.ctx, key, utils.Concat(curr, indexedValues))
 	}
 	fmt.Println("Done writing")
 }
 
-func (io *IO[T]) Clear() {
-	io.ctx = context.WithValue(io.ctx, io.key, nil)
+func (io *IO[T]) Clear(key IOKey) {
+	io.ctx = context.WithValue(io.ctx, key, nil)
 }
 
 func (io *IO[T]) Close() {
@@ -74,8 +53,8 @@ func (io *IO[T]) Close() {
 	io.canc()
 }
 
-func WriteInt(i *IO[int64], values []int64) {
+func WriteInt(i *IO[int64], values []int64, key IOKey) {
 	asSeq := utils.SliceToSeq(values)
 	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return shared.NewInt(v) }, asSeq)
-	i.WriteFromSeq(asComparable)
+	i.WriteFromSeq(asComparable, key)
 }
