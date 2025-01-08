@@ -70,6 +70,11 @@ func WriteInt(i *IO[int64], values []int64, key IOKey) {
 	i.WriteFromSeq(asComparable, key)
 }
 
+func (io *IO[T]) StartDispatcher() {
+	fmt.Println("Starting Dispatcher")
+	io.d.Dispatch()
+}
+
 func (io *IO[T]) ShowLeaderboard() {
 	fmt.Println("Leaderboard")
 	for range io.d.Ping {
