@@ -69,3 +69,14 @@ func WriteInt(i *IO[int64], values []int64, key IOKey) {
 	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return shared.NewInt(v) }, asSeq)
 	i.WriteFromSeq(asComparable, key)
 }
+
+func (io *IO[T]) ShowLeaderboard() {
+	fmt.Println("Leaderboard")
+	for range io.d.Ping {
+		clearTable()
+		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard())
+		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
+
+	}
+
+}

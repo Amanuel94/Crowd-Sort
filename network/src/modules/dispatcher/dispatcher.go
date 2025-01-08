@@ -25,6 +25,7 @@ type Dispatcher[T any] struct {
 	tcounter int         // number of assigned tasks
 	rank     map[any]int // maps id to rank
 	channel  chan *shared.Pair[T]
+	Ping     chan int
 }
 
 func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
@@ -104,5 +105,24 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 			d.rank[(*pair).F.GetIndex()] = sRank
 			d.rank[(*pair).S.GetIndex()] = fRank
 		}
+
+		d.Ping <- 1
 	}
+	close(d.Ping)
+}
+
+func (d *Dispatcher[T]) GetLeaderboard() [](shared.IndexedItem[T]) {
+	lb := make([]shared.IndexedItem[T], len(d.lb))
+	for i, item := range d.lb {
+		lb[i] = item.(shared.IndexedItem[T])
+	}
+	return lb
+}
+
+func (d *Dispatcher[T]) GetTaskCount() int {
+	return d.tcounter
+}
+
+func (d *Dispatcher[T]) GetTotalTasks() int {
+	return d.n
 }

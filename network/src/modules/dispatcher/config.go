@@ -7,14 +7,15 @@ import (
 )
 
 type DispatcherConfig[T any] struct {
-	s        *selector.Selector[T]
-	lb       [](any)
-	n        int
-	cpw      int         //capacity per worker
-	pool     *pq[T]      // should contain already defined workers/processes
-	tcounter int         // number of assigned tasks
-	rank     map[any]int // maps id to rank
-	channel  chan *shared.Pair[T]
+	s           *selector.Selector[T]
+	lb          [](any)
+	n           int
+	cpw         int         //capacity per worker
+	pool        *pq[T]      // should contain already defined workers/processes
+	tcounter    int         // number of assigned tasks
+	rank        map[any]int // maps id to rank
+	channel     chan *shared.Pair[T]
+	refresh_cnt int
 }
 
 func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], processes iter.Seq[*shared.IndexedComparator[T]]) *DispatcherConfig[T] {
@@ -32,14 +33,15 @@ func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], proc
 	scfg := selector.NewConfig()
 
 	return &DispatcherConfig[T]{
-		s:        selector.NewSelector[T](*scfg),
-		lb:       lb,
-		n:        len(lb),
-		cpw:      len(lb)/len(pq.pq) + 1,
-		pool:     pq,
-		tcounter: 0,
-		rank:     rank,
-		channel:  make(chan *shared.Pair[T]),
+		s:           selector.NewSelector[T](*scfg),
+		lb:          lb,
+		n:           len(lb),
+		cpw:         len(lb)/len(pq.pq) + 1,
+		pool:        pq,
+		tcounter:    0,
+		rank:        rank,
+		channel:     make(chan *shared.Pair[T]),
+		refresh_cnt: 0,
 	}
 
 }
