@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"iter"
 	"network/interfaces"
+	"network/modules/dispatcher"
 	"network/shared"
 	"network/utils"
 )
@@ -17,6 +18,16 @@ func Init[T any](cfg *Config[T]) *IO[T] {
 	newIO := &IO[T]{}
 	newIO.ctx = *cfg.ctx
 	newIO.canc = *cfg.canc
+	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.IndexedItem[T] {
+		return shared.NewIndexedItem[T](*v).(*shared.IndexedItem[T])
+	}, cfg.items)
+
+	comparators := utils.Map(func(v func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) *shared.IndexedComparator[T] {
+		return shared.NewComparator[T](v).(*shared.IndexedComparator[T])
+	}, cfg.comparators)
+
+	dcfg := dispatcher.IndexedDispatcherConfig[T](items, comparators)
+	newIO.d = dispatcher.New(dcfg)
 	return newIO
 }
 func (io *IO[T]) ReadItems(key IOKey) iter.Seq[shared.IndexedItem[T]] {

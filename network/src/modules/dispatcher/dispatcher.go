@@ -27,7 +27,7 @@ type Dispatcher[T any] struct {
 	channel  chan *shared.Pair[T]
 }
 
-func NewDispatcher[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
+func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	return &Dispatcher[T]{
 		s:        cfg.s,
 		lb:       cfg.lb,
@@ -82,7 +82,7 @@ func (d *Dispatcher[T]) Dispatch() {
 		go d.assign(&wg, worker, pair)
 		(*worker).Assigned()
 		d.tcounter++
-		d.pool.Push(worker)
+		d.pool.Push(*worker)
 
 	}
 	wg.Wait()

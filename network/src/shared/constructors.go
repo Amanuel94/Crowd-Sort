@@ -84,10 +84,10 @@ func (ic IndexedComparator[T]) TaskCount() int {
 
 // Constructor for Creating Comparator Modules
 
-func NewComparator[T any](index uuid.UUID, cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error), task_cnt int) interfaces.Comparator[T] {
+func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) interfaces.Comparator[T] {
 	return &IndexedComparator[T]{
-		index:    index,
+		index:    uuid.New(),
 		cmp:      cmp,
-		task_cnt: task_cnt,
+		task_cnt: 0,
 	}
 }

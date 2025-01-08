@@ -2,14 +2,17 @@ package io
 
 import (
 	"context"
+	"iter"
+	"network/interfaces"
 	"network/modules/dispatcher"
 )
 
 type Config[T any] struct {
-	ctx  *context.Context
-	canc *context.CancelFunc
-	key  string
-	d    *dispatcher.Dispatcher[T]
+	ctx         *context.Context
+	canc        *context.CancelFunc
+	d           *dispatcher.Dispatcher[T]
+	items       iter.Seq[*interfaces.Comparable[T]]
+	comparators iter.Seq[func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)]
 }
 
 func NewConfig[T any](ctx *context.Context) *Config[T] {

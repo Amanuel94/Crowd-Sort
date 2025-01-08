@@ -1,7 +1,11 @@
 // heap implementation for (interfaces.Comparator management
 package dispatcher
 
-import "network/interfaces"
+import (
+	"iter"
+	"network/interfaces"
+	"network/shared"
+)
 
 type pq[T any] struct {
 	pq []*(interfaces.Comparator[T])
@@ -21,8 +25,16 @@ func FromList[T any](processes []*(interfaces.Comparator[T])) *pq[T] {
 
 }
 
-func (p *pq[T]) Push(item *(interfaces.Comparator[T])) {
-	p.pq = append(p.pq, item)
+func FromSeq[T any](processes iter.Seq[*shared.IndexedComparator[T]]) *pq[T] {
+	pq := NewPQ[T]()
+	for process := range processes {
+		pq.Push(process)
+	}
+	return pq
+}
+
+func (p *pq[T]) Push(item interfaces.Comparator[T]) {
+	p.pq = append(p.pq, &item)
 	for i := len(p.pq) - 1; i > 0; {
 
 		parent := (i - 1) / 2

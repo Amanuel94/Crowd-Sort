@@ -1,7 +1,7 @@
 package dispatcher
 
 import (
-	"network/interfaces"
+	"iter"
 	"network/modules/selector"
 	"network/shared"
 )
@@ -17,23 +17,25 @@ type DispatcherConfig[T any] struct {
 	channel  chan *shared.Pair[T]
 }
 
-func IndexedDispatcherConfig[T any](items []*shared.IndexedItem[T], processes []*(interfaces.Comparator[T])) *DispatcherConfig[T] {
+func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], processes iter.Seq[*shared.IndexedComparator[T]]) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)
-	for idx, item := range items {
+	idx := 0
+	for item := range items {
 		lb = append(lb, item)
 		rank[(*item).GetIndex()] = idx
 	}
 
-	pq := FromList(processes)
+	// pq := FromList(processes)
+	pq := FromSeq(processes)
 	scfg := selector.NewConfig()
 
 	return &DispatcherConfig[T]{
 		s:        selector.NewSelector[T](*scfg),
 		lb:       lb,
 		n:        len(lb),
-		cpw:      len(lb) / len(processes),
+		cpw:      len(lb)/len(pq.pq) + 1,
 		pool:     pq,
 		tcounter: 0,
 		rank:     rank,
