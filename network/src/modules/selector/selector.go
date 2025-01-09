@@ -74,12 +74,13 @@ func (s *Selector[T]) Next() (*shared.Pair[T], bool) {
 	if s.q.size == 0 {
 		return &shared.Pair[T]{}, false
 	}
-	return s.q.Dequeue(), true
+	return s.q.Dequeue(&s.MSG), true
 }
 
 // Enqueue pairs with 0 dependencies
 func (s *Selector[T]) PrepareNeighbours(id uuid.UUID) {
 	node, ok := s.g.m[id]
+	deferPanic(&s.MSG)
 	argue(ok, "Node not found")
 	for _, neighbour := range node.Neighbours {
 		neighbour.Adj--
