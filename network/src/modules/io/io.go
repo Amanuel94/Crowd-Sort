@@ -59,6 +59,12 @@ func (io *IO[T]) Clear(key IOKey) {
 	io.ctx = context.WithValue(io.ctx, key, nil)
 }
 
+func (io *IO[T]) collectDispatcherMessages() {
+	for msg := range io.d.MSG {
+		io.msgBuffer = append(io.msgBuffer, msg)
+	}
+}
+
 func (io *IO[T]) Close() {
 	fmt.Println("Closing IO")
 	io.canc()
@@ -71,17 +77,26 @@ func WriteInt(i *IO[int64], values []int64, key IOKey) {
 }
 
 func (io *IO[T]) StartDispatcher() {
-	fmt.Println("Starting Dispatcher")
+	go io.collectDispatcherMessages()
+	io.msgBuffer = append(io.msgBuffer, "Starting Dispatcher")
 	io.d.Dispatch()
 }
 
+func (io *IO[T]) showCollectedMessages() {
+	for _, msg := range io.msgBuffer {
+		fmt.Println(msg)
+	}
+}
+
 func (io *IO[T]) ShowLeaderboard() {
-	fmt.Println("Leaderboard")
+	io.msgBuffer = append(io.msgBuffer, "Live Leaderboard")
 	for range io.d.Ping {
 		clearTable()
+		io.showCollectedMessages()
 		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard())
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 
 	}
+	close(io.d.MSG)
 
 }
