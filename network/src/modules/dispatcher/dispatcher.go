@@ -26,6 +26,7 @@ type Dispatcher[T any] struct {
 	rank     map[any]int // maps id to rank
 	channel  chan *shared.Pair[T]
 	Ping     chan int
+	MSG      chan interface{}
 }
 
 func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
@@ -38,6 +39,8 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		tcounter: cfg.tcounter,
 		rank:     cfg.rank,
 		channel:  cfg.channel,
+		Ping:     make(chan int),
+		MSG:      make(chan interface{}),
 	}
 }
 
@@ -60,11 +63,21 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, process *interfaces.Comparato
 
 }
 
+func (d *Dispatcher[T]) collectSelectorMessages(s *selector.Selector[T]) {
+	for msg := range s.MSG {
+		(*d).MSG <- msg
+	}
+}
+
 func (d *Dispatcher[T]) Dispatch() {
+
+	go d.collectSelectorMessages(d.s)
+	deferPanic(&d.MSG)
 
 	get_ready_result := func() (*shared.Pair[T], error) {
 		res, ok := d.s.Next()
 		if !ok {
+			d.MSG <- "DISPATCHER WARNING: No ready tasks"
 			return nil, backoffError(ok, "No ready tasks")
 		}
 		return res, nil
@@ -79,6 +92,7 @@ func (d *Dispatcher[T]) Dispatch() {
 			break // TODO: handle this
 		}
 		worker := d.pool.Pop()
+
 		argue((*worker).TaskCount() <= d.cpw, "Worker is overloaded")
 		go d.assign(&wg, worker, pair)
 		(*worker).Assigned()
@@ -88,13 +102,15 @@ func (d *Dispatcher[T]) Dispatch() {
 	}
 	wg.Wait()
 	close(d.channel)
+	close(d.s.MSG)
 
-	fmt.Println("Every task has been assigned")
+	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Finished dispatching %d tasks", d.tcounter)
 
 }
 
 func (d *Dispatcher[T]) UpdateLeaderboard() {
 
+	deferPanic(&d.MSG)
 	for pair := range d.channel {
 		res := (*pair).Order
 		argue(res != shared.NA, "Found Incomparable pairs")

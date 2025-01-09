@@ -15,7 +15,13 @@ func backoffError(v bool, msg string) error {
 
 func argue(v bool, msg string) {
 	if !v {
-		panic(errors.New(msg))
+		panic("DISPATCHER ERROR: " + msg)
 	}
 
+}
+
+func deferPanic(msg *chan interface{}) {
+	if r := recover(); r != nil {
+		(*msg) <- r
+	}
 }
