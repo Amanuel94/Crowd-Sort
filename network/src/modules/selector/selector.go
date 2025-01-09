@@ -14,6 +14,7 @@ type Selector[T any] struct {
 	// leaves  *queue[Node[T]]
 	alg     string
 	batched bool
+	MSG     chan interface{}
 }
 
 // TODO: Implement bitonic sort and shell sort
@@ -33,12 +34,14 @@ func (s *Selector[T]) NPairs() int {
 
 func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
+	deferPanic(&s.MSG)
 	argue(len(u) > 0, "Empty input")
+
 	dummyInstance := shared.IndexedItem[T]{}
 	argue(reflect.TypeOf(u[0]) == reflect.TypeOf(dummyInstance), "Invalid type")
 
 	n_nodes := len(u)
-	pair_indices := BEMS_pairs_generator(n_nodes, 1, 0)
+	pair_indices := BEMS_pairs_generator(n_nodes, 1, 0, &s.MSG)
 
 	pmap := make(map[uuid.UUID]uuid.UUID)
 	for _, pi := range pair_indices {
@@ -52,10 +55,10 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 		fprev, fok := pmap[pair.F.GetIndex().(uuid.UUID)]
 		sprev, sok := pmap[pair.S.GetIndex().(uuid.UUID)]
 		if fok {
-			s.g.AddEdge(fprev, pair.Id)
+			s.g.AddEdge(fprev, pair.Id, &s.MSG)
 		}
 		if sok {
-			s.g.AddEdge(sprev, pair.Id)
+			s.g.AddEdge(sprev, pair.Id, &s.MSG)
 		}
 		pmap[pair.F.GetIndex().(uuid.UUID)] = pair.Id
 		pmap[pair.S.GetIndex().(uuid.UUID)] = pair.Id

@@ -36,11 +36,12 @@ func (g *Graph[T]) AddNode(u *shared.Pair[T]) *Node[T] {
 	return n
 }
 
-func (g *Graph[T]) AddEdge(src_id uuid.UUID, dest_id uuid.UUID) {
+func (g *Graph[T]) AddEdge(src_id uuid.UUID, dest_id uuid.UUID, msg *chan interface{}) {
 
 	nsrc, oku := g.m[src_id]
 	ndest, okv := g.m[dest_id]
 
+	deferPanic(msg)
 	argue(oku && okv, "Nodes not found")
 	for _, neighbour := range nsrc.Neighbours {
 		if neighbour.Value.Id == dest_id {

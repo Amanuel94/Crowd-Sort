@@ -17,7 +17,7 @@ func TestBEMS_pairs_generator(t *testing.T) {
 		for j := 0; j < size; j++ {
 			rand_list[j] = utils.RandInt(1, 1<<10)
 		}
-		pairs := BEMS_pairs_generator(size, 1, 0)
+		pairs := BEMS_pairs_generator(size, 1, 0, nil)
 
 		for _, pair := range pairs {
 			i, j := (pair)[0], (pair)[1]
