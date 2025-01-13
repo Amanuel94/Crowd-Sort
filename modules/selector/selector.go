@@ -3,8 +3,8 @@ package selector
 import (
 	"reflect"
 
-	"github.com/amanuel94/crowdsort/network/interfaces"
-	"github.com/amanuel94/crowdsort/network/shared"
+	"github.com/amanuel94/crowdsort/interfaces"
+	"github.com/amanuel94/crowdsort/shared"
 
 	"github.com/google/uuid"
 )

@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"text/tabwriter"
 
-	"github.com/amanuel94/crowdsort/network/shared"
+	"github.com/amanuel94/crowdsort/shared"
 )
 
 // for printing the leaderboard as a table

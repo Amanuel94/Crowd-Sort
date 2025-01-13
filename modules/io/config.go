@@ -4,7 +4,7 @@ import (
 	"context"
 	"iter"
 
-	"github.com/amanuel94/crowdsort/network/interfaces"
+	"github.com/amanuel94/crowdsort/interfaces"
 )
 
 type Config[T any] struct {

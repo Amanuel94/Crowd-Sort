@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/amanuel94/crowdsort/network/modules/io"
+	"github.com/amanuel94/crowdsort/modules/io"
 )
 
 func main() {
