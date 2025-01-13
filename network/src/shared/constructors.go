@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"network/interfaces"
+	"github.com/amanuel94/crowdsort/interfaces"
 
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"

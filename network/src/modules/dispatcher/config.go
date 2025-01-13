@@ -2,8 +2,10 @@ package dispatcher
 
 import (
 	"iter"
-	"network/modules/selector"
-	"network/shared"
+
+	"github.com/amanuel94/crowdsort/shared"
+
+	"github.com/amanuel94/crowdsort/modules/selector"
 )
 
 type DispatcherConfig[T any] struct {

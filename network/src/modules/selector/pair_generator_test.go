@@ -3,8 +3,9 @@ package selector
 // test for the pair generator
 
 import (
-	"network/utils"
 	"testing"
+
+	"github.com/amanuel94/crowdsort/utils"
 )
 
 func TestBEMS_pairs_generator(t *testing.T) {

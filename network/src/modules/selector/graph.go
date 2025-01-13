@@ -3,7 +3,7 @@
 package selector
 
 import (
-	"network/shared"
+	"github.com/amanuel94/crowdsort/shared"
 
 	"github.com/google/uuid"
 )

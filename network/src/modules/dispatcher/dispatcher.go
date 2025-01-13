@@ -3,10 +3,11 @@ package dispatcher
 import (
 	"context"
 	"fmt"
-	"network/interfaces"
-	"network/modules/selector"
-	"network/shared"
 	"sync"
+
+	"github.com/amanuel94/crowdsort/interfaces"
+	"github.com/amanuel94/crowdsort/modules/selector"
+	"github.com/amanuel94/crowdsort/shared"
 
 	"github.com/cenkalti/backoff/v5"
 )

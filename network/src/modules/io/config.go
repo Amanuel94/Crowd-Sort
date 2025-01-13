@@ -3,7 +3,8 @@ package io
 import (
 	"context"
 	"iter"
-	"network/interfaces"
+
+	"github.com/amanuel94/crowdsort/interfaces"
 )
 
 type Config[T any] struct {

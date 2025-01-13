@@ -1,7 +1,7 @@
 package selector
 
 import (
-	"network/utils"
+	"github.com/amanuel94/crowdsort/utils"
 )
 
 // pair generator for batcher even-odd-merge sort (BEMS)

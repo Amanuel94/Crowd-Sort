@@ -2,10 +2,11 @@ package io
 
 import (
 	"fmt"
-	"network/shared"
 	"os"
 	"os/exec"
 	"text/tabwriter"
+
+	"github.com/amanuel94/crowdsort/shared"
 )
 
 // for printing the leaderboard as a table

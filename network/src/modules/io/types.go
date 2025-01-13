@@ -2,7 +2,8 @@ package io
 
 import (
 	"context"
-	"network/modules/dispatcher"
+
+	"github.com/amanuel94/crowdsort/modules/dispatcher"
 )
 
 type IO[T any] struct {
