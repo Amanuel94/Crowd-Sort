@@ -1,9 +1,9 @@
 package selector
 
 import (
-	"github.com/amanuel94/crowdsort/interfaces"
-	"github.com/amanuel94/crowdsort/shared"
-	"github.com/amanuel94/crowdsort/utils"
+	"github.com/amanuel94/crowdsort/network/interfaces"
+	"github.com/amanuel94/crowdsort/network/shared"
+	"github.com/amanuel94/crowdsort/network/utils"
 
 	"testing"
 

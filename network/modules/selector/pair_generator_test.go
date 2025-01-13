@@ -5,7 +5,7 @@ package selector
 import (
 	"testing"
 
-	"github.com/amanuel94/crowdsort/utils"
+	"github.com/amanuel94/crowdsort/network/utils"
 )
 
 func TestBEMS_pairs_generator(t *testing.T) {

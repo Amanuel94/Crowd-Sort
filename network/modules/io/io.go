@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/amanuel94/crowdsort/interfaces"
-	"github.com/amanuel94/crowdsort/modules/dispatcher"
-	"github.com/amanuel94/crowdsort/shared"
-	"github.com/amanuel94/crowdsort/utils"
+	"github.com/amanuel94/crowdsort/network/interfaces"
+	"github.com/amanuel94/crowdsort/network/modules/dispatcher"
+	"github.com/amanuel94/crowdsort/network/shared"
+	"github.com/amanuel94/crowdsort/network/utils"
 )
 
 // Initalizes the IO module

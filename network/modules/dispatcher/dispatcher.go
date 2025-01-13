@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/amanuel94/crowdsort/interfaces"
-	"github.com/amanuel94/crowdsort/modules/selector"
-	"github.com/amanuel94/crowdsort/shared"
+	"github.com/amanuel94/crowdsort/network/interfaces"
+	"github.com/amanuel94/crowdsort/network/modules/selector"
+	"github.com/amanuel94/crowdsort/network/shared"
 
 	"github.com/cenkalti/backoff/v5"
 )
