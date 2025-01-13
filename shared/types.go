@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"github.com/amanuel94/crowdsort/interfaces"
+	"github.com/Amanuel94/crowdsort/interfaces"
 
 	"github.com/google/uuid"
 )

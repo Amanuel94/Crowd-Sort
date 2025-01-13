@@ -1,4 +1,4 @@
-module github.com/amanuel94/crowdsort
+module github.com/Amanuel94/crowdsort
 
 go 1.23.3
 

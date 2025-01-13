@@ -4,8 +4,8 @@ package dispatcher
 import (
 	"iter"
 
-	"github.com/amanuel94/crowdsort/interfaces"
-	"github.com/amanuel94/crowdsort/shared"
+	"github.com/Amanuel94/crowdsort/interfaces"
+	"github.com/Amanuel94/crowdsort/shared"
 )
 
 type pq[T any] struct {

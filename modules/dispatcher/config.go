@@ -3,9 +3,9 @@ package dispatcher
 import (
 	"iter"
 
-	"github.com/amanuel94/crowdsort/shared"
+	"github.com/Amanuel94/crowdsort/shared"
 
-	"github.com/amanuel94/crowdsort/modules/selector"
+	"github.com/Amanuel94/crowdsort/modules/selector"
 )
 
 type DispatcherConfig[T any] struct {

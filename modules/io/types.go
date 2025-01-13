@@ -3,7 +3,7 @@ package io
 import (
 	"context"
 
-	"github.com/amanuel94/crowdsort/modules/dispatcher"
+	"github.com/Amanuel94/crowdsort/modules/dispatcher"
 )
 
 type IO[T any] struct {
