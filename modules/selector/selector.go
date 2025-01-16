@@ -14,6 +14,7 @@ type Selector[T any] struct {
 	batched bool
 	MSG     chan interface{}
 	Rank    map[uuid.UUID]int
+	I2I     map[uuid.UUID]*shared.IndexedItem[T]
 }
 
 // TODO: Implement bitonic sort and shell sort
@@ -35,6 +36,7 @@ func (s *Selector[T]) NPairs() int {
 func (s *Selector[T]) RegisterItems(u [](interfaces.Comparable[T])) {
 	for i, item := range u {
 		s.Rank[item.GetIndex().(uuid.UUID)] = i
+		s.I2I[item.GetIndex().(uuid.UUID)] = item.(*shared.IndexedItem[T])
 	}
 }
 

@@ -26,7 +26,7 @@ type Dispatcher[T any] struct {
 	tcounter int         // number of assigned tasks
 	rank     map[any]int // maps id to rank
 	channel  chan *shared.Pair[T]
-	id2Item  map[any]*shared.IndexedItem[T]
+	id2Item  map[any]*interfaces.Comparable[T]
 	Ping     chan int
 	MSG      chan interface{}
 }
@@ -40,7 +40,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		tcounter: cfg.tcounter,
 		rank:     cfg.rank,
 		channel:  cfg.channel,
-		id2Item:  make(map[any]*shared.IndexedItem[T]),
+		id2Item:  make(map[any]*interfaces.Comparable[T]),
 		Ping:     make(chan int),
 		MSG:      make(chan interface{}),
 	}
@@ -50,7 +50,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		item_intf := item.(interfaces.Comparable[T])
 		items = append(items, item_intf)
 		item_indxd := item.(*shared.IndexedItem[T])
-		d.id2Item[(*item_indxd).GetIndex()] = item.(*shared.IndexedItem[T])
+		d.id2Item[(*item_indxd).GetIndex()] = &item_intf
 		d.rank[(*item_indxd).GetIndex()] = idx
 	}
 	d.s.CreateGraph(items)
@@ -61,10 +61,11 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 
 func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Pair[T]) {
 	defer wg.Done()
-	// d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetIndex())
+	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetIndex())
 
-	val, err := (*worker).CompareEntries(&pair.F, &pair.S)
-	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Comparing %v and %v", pair.F.GetValue(), pair.S.GetValue())
+	pf := d.id2Item[pair.F]
+	ps := d.id2Item[pair.S]
+	val, err := (*worker).CompareEntries(pf, ps)
 	argue(err == nil, "Error in comparing")
 	switch val {
 	case 1: // F > S
@@ -76,7 +77,6 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	}
 
 	d.channel <- pair
-	// d.s.PrepareNeighbours(pair.Id)
 
 }
 
@@ -90,7 +90,6 @@ func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Pair[T], bool)) fu
 	get_ready_result := func() (*shared.Pair[T], error) {
 		res, ok := attr()
 		if !ok {
-			// d.MSG <- "INFO: Waiting For Tasks to Dispatch "
 			return nil, backoffError(ok, "No ready tasks")
 		}
 		return res, nil
@@ -135,11 +134,12 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 		d.s.PrepareNeighbours(pair.Id)
 		res := (*pair).Order
 		argue(res != shared.NA, "Found Incomparable pairs")
-		// d.MSG <- fmt.Sprintf("PAIRS::::: %v - %v", pair.F.GetValue(), pair.S.GetValue())
-		fRank, sRank := d.rank[(*pair).F.GetIndex()], d.rank[(*pair).S.GetIndex()]
-		if d.lb[fRank].(interfaces.Comparable[T]).Compare(d.lb[sRank].(interfaces.Comparable[T])) > 0 {
-			// if res == shared.GT {
-			d.lb[fRank], d.lb[sRank] = d.lb[sRank], d.lb[fRank]
+		pf, ps := d.id2Item[(*pair).F], d.id2Item[(*pair).S]
+		if res == shared.GT {
+			pfv := (*pf).GetValue()
+			psv := (*ps).GetValue()
+			(*pf).SetValue(psv)
+			(*ps).SetValue(pfv)
 		}
 		count += 1
 		d.Ping <- 1

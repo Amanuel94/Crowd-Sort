@@ -13,8 +13,8 @@ import (
 
 func main() {
 
-	n_items := 50
-	n_cmps := 15
+	n_items := 8
+	n_cmps := 5
 	items := generateItems(n_items)
 	for item := range items {
 		fmt.Print((*item).GetValue())
