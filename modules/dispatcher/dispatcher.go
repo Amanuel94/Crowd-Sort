@@ -27,7 +27,7 @@ type Dispatcher[T any] struct {
 	rank     map[any]int // maps id to rank
 	channel  chan *shared.Pair[T]
 	id2Item  map[any]*interfaces.Comparable[T]
-	Ping     chan int
+	Ping     chan shared.Pair[T]
 	MSG      chan interface{}
 }
 
@@ -41,7 +41,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		rank:     cfg.rank,
 		channel:  cfg.channel,
 		id2Item:  make(map[any]*interfaces.Comparable[T]),
-		Ping:     make(chan int),
+		Ping:     make(chan shared.Pair[T]),
 		MSG:      make(chan interface{}),
 	}
 	items := []interfaces.Comparable[T]{}
@@ -145,7 +145,7 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 			(*ps).SetValue(pfv)
 		}
 		count += 1
-		d.Ping <- 1
+		d.Ping <- *pair
 	}
 
 	d.MSG <- fmt.Sprintf("INFO : %d tasks completed", count)

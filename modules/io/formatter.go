@@ -7,11 +7,12 @@ import (
 	"text/tabwriter"
 
 	"github.com/Amanuel94/crowdsort/shared"
+	"github.com/TreyBastian/colourize"
 )
 
 // for printing the leaderboard as a table
 
-func printTable[T any](header []string, data []shared.IndexedItem[T]) {
+func printTable[T any](header []string, data []shared.IndexedItem[T], p shared.Pair[T]) {
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
 
@@ -19,18 +20,23 @@ func printTable[T any](header []string, data []shared.IndexedItem[T]) {
 	fmt.Fprintln(writer, formatSeparator(len(header)))
 
 	for _, row := range data {
-		fmt.Fprintln(writer, formatRow(row))
+		fmt.Fprintln(writer, formatRow(row, p))
 	}
 
 	writer.Flush()
 }
 
 func formatHeader(header []string) string {
-	return fmt.Sprintf("%s\t%s\t", header[0], header[1])
+	return fmt.Sprintf("%s\t%v\t", header[0], header[1])
 }
 
-func formatRow[T any](item shared.IndexedItem[T]) string {
-	return fmt.Sprintf("%s\t%v\t", item.GetIndex(), item.GetValue())
+func formatRow[T any](item shared.IndexedItem[T], p shared.Pair[T]) string {
+	color := colourize.White
+	if item.GetIndex() == p.F || item.GetIndex() == p.S {
+		color = colourize.Green
+	}
+	return fmt.Sprintf("%s\t%v\t", colourize.Colourize(item.GetIndex(), color), colourize.Colourize(item.GetValue(), color))
+	// return fmt.Sprintf("%s\t%v\t", item.GetIndex(), item.GetValue())
 }
 
 func printProgressBar(current, total int) {

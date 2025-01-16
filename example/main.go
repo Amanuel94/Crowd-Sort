@@ -13,7 +13,7 @@ import (
 
 func main() {
 
-	n_items := 20
+	n_items := 10
 	n_cmps := 3
 	items := generateItems(n_items)
 	for item := range items {
@@ -55,7 +55,7 @@ func generateComparators(n int) iter.Seq[func(*interfaces.Comparable[int], *inte
 		comparators[index] = func(a *interfaces.Comparable[int], b *interfaces.Comparable[int]) (int, error) {
 
 			w := utils.RandInt(1, 5)
-			waitTime := time.Duration(w) * time.Millisecond
+			waitTime := time.Duration(w) * time.Second
 			time.Sleep(waitTime)
 			return (*a).Compare(*b), nil
 		}

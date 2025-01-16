@@ -57,10 +57,10 @@ func (io *IO[T]) StartDispatcher() {
 func (io *IO[T]) ShowLeaderboard() {
 	cnt := 0
 	go io.d.UpdateLeaderboard()
-	for range io.d.Ping {
+	for p := range io.d.Ping {
 		clearTable()
 		fmt.Printf("Live Leaderboard\n")
-		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard())
+		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard(), p)
 		fmt.Println()
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 		fmt.Println()
