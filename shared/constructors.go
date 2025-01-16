@@ -2,20 +2,20 @@ package shared
 
 import (
 	"github.com/Amanuel94/crowdsort/interfaces"
+	"github.com/lithammer/shortuuid"
 
-	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 )
 
 // Wrapper for indexing items
 type IndexedItem[T any] struct {
-	Index uuid.UUID // primary key
+	Index string // primary key
 	Value interfaces.Comparable[T]
 }
 
 func NewIndexedItem[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
 	return IndexedItem[T]{
-		Index: uuid.New(),
+		Index: shortuuid.New(),
 		Value: value,
 	}
 }
@@ -65,13 +65,13 @@ func (o *OrderedType[T]) SetValue(val T) {
 
 func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 	return &OrderedType[T]{
-		Index: uuid.New(),
+		Index: shortuuid.New(),
 		Value: value,
 	}
 }
 
 type IndexedComparator[T any] struct {
-	index    uuid.UUID
+	index    string
 	cmp      func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
 	task_cnt int
 }
@@ -96,12 +96,12 @@ func (ic IndexedComparator[T]) TaskCount() int {
 
 func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) interfaces.Comparator[T] {
 	return &IndexedComparator[T]{
-		index:    uuid.New(),
+		index:    shortuuid.New(),
 		cmp:      cmp,
 		task_cnt: 0,
 	}
 }
 
-func NewPair[T any](f uuid.UUID, s uuid.UUID) *Pair[T] {
-	return &Pair[T]{Id: uuid.New(), F: f, S: s, Order: NA}
+func NewPair[T any](f string, s string) *Pair[T] {
+	return &Pair[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
 }

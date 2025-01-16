@@ -1,9 +1,5 @@
 package shared
 
-import (
-	"github.com/google/uuid"
-)
-
 // wrapper for pair
 // ****************************************************
 
@@ -18,8 +14,8 @@ const (
 )
 
 type Pair[T any] struct {
-	Id    uuid.UUID
-	F     uuid.UUID
-	S     uuid.UUID
+	Id    string
+	F     string
+	S     string
 	Order Ord
 }

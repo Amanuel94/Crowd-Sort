@@ -3,8 +3,6 @@ package selector
 import (
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/shared"
-
-	"github.com/google/uuid"
 )
 
 type Selector[T any] struct {
@@ -13,8 +11,8 @@ type Selector[T any] struct {
 	alg     string
 	batched bool
 	MSG     chan interface{}
-	Rank    map[uuid.UUID]int
-	I2I     map[uuid.UUID]*shared.IndexedItem[T]
+	Rank    map[string]int
+	I2I     map[string]*shared.IndexedItem[T]
 }
 
 // TODO: Implement bitonic sort and shell sort
@@ -25,7 +23,7 @@ func NewSelector[T any](cfg Config) *Selector[T] {
 		q:       NewQueue[*shared.Pair[T]](),
 		alg:     cfg.alg,
 		batched: false,
-		Rank:    make(map[uuid.UUID]int),
+		Rank:    make(map[string]int),
 	}
 }
 
@@ -35,8 +33,8 @@ func (s *Selector[T]) NPairs() int {
 
 func (s *Selector[T]) RegisterItems(u [](interfaces.Comparable[T])) {
 	for i, item := range u {
-		s.Rank[item.GetIndex().(uuid.UUID)] = i
-		s.I2I[item.GetIndex().(uuid.UUID)] = item.(*shared.IndexedItem[T])
+		s.Rank[item.GetIndex().(string)] = i
+		s.I2I[item.GetIndex().(string)] = item.(*shared.IndexedItem[T])
 	}
 }
 
@@ -47,13 +45,13 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 	n_nodes := len(u)
 	pair_indices := BEMS_pairs_generator(n_nodes, 1, 0, &s.MSG)
-	pmap := make(map[uuid.UUID]uuid.UUID)
+	pmap := make(map[string]string)
 	for _, pi := range pair_indices {
 		i, j := pi[0], pi[1]
 		if i >= n_nodes || j >= n_nodes {
 			continue
 		}
-		pair := shared.NewPair[T](u[i].GetIndex().(uuid.UUID), u[j].GetIndex().(uuid.UUID))
+		pair := shared.NewPair[T](u[i].GetIndex().(string), u[j].GetIndex().(string))
 		s.g.AddNode(pair)
 
 		fprev, fok := pmap[pair.F]
@@ -84,7 +82,7 @@ func (s *Selector[T]) Next() (*shared.Pair[T], bool) {
 }
 
 // Enqueue pairs with 0 dependencies
-func (s *Selector[T]) PrepareNeighbours(id uuid.UUID) {
+func (s *Selector[T]) PrepareNeighbours(id string) {
 	node, ok := s.g.m[id]
 	deferPanic(&s.MSG)
 	argue(ok, "Node not found")

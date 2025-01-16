@@ -89,6 +89,7 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Pair[T], bool)) func() (*shared.Pair[T], error) {
 	get_ready_result := func() (*shared.Pair[T], error) {
 		res, ok := attr()
+		d.MSG <- fmt.Sprintf("DISPATCHER INFO: %s", "Waiting for new tasks")
 		if !ok {
 			return nil, backoffError(ok, "No ready tasks")
 		}
@@ -101,7 +102,7 @@ func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Pair[T], bool)) fu
 func (d *Dispatcher[T]) Dispatch() {
 
 	go d.collectSelectorMessages()
-	deferPanic(&d.MSG)
+	defer deferPanic(&d.MSG)
 
 	wg := sync.WaitGroup{}
 	wg.Add(d.n)
@@ -113,7 +114,9 @@ func (d *Dispatcher[T]) Dispatch() {
 			panic(err)
 		}
 		worker := d.pool.Pop()
-		argue((*worker).TaskCount() <= d.cpw, "Worker is overloaded")
+		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
+			worker = d.pool.Pop()
+		}
 		go d.assign(&wg, worker, pair)
 		(*worker).Assigned()
 		d.pool.Push(*worker)

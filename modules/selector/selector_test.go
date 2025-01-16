@@ -6,8 +6,6 @@ import (
 	"github.com/Amanuel94/crowdsort/utils"
 
 	"testing"
-
-	"github.com/google/uuid"
 )
 
 func TestSelector(t *testing.T) {
@@ -20,9 +18,9 @@ func TestSelector(t *testing.T) {
 		u = append(u, shared.NewIndexedItem[int](num))
 	}
 
-	m := make(map[uuid.UUID]shared.IndexedItem[int])
+	m := make(map[string]shared.IndexedItem[int])
 	for _, item := range u {
-		m[item.GetIndex().(uuid.UUID)] = item.(shared.IndexedItem[int])
+		m[item.GetIndex().(string)] = item.(shared.IndexedItem[int])
 	}
 
 	// create selector

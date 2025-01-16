@@ -4,8 +4,6 @@ package selector
 
 import (
 	"github.com/Amanuel94/crowdsort/shared"
-
-	"github.com/google/uuid"
 )
 
 type Node[T any] struct {
@@ -16,13 +14,13 @@ type Node[T any] struct {
 
 type Graph[T any] struct {
 	Nodes []*Node[T]
-	m     map[uuid.UUID]*Node[T]
+	m     map[string]*Node[T]
 }
 
 func NewGraph[T any]() *Graph[T] {
 	return &Graph[T]{
 		Nodes: []*Node[T]{},
-		m:     make(map[uuid.UUID]*Node[T]),
+		m:     make(map[string]*Node[T]),
 	}
 }
 
@@ -36,7 +34,7 @@ func (g *Graph[T]) AddNode(u *shared.Pair[T]) *Node[T] {
 	return n
 }
 
-func (g *Graph[T]) AddEdge(src_id uuid.UUID, dest_id uuid.UUID, msg *chan interface{}) {
+func (g *Graph[T]) AddEdge(src_id string, dest_id string, msg *chan interface{}) {
 
 	nsrc, oku := g.m[src_id]
 	ndest, okv := g.m[dest_id]
