@@ -4,6 +4,7 @@ package interfaces
 type Comparable[T any] interface {
 	GetIndex() any
 	GetValue() T
+	SetValue(T)
 	Compare(other Comparable[T]) int
 }
 

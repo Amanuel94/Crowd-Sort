@@ -38,7 +38,7 @@ func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], proc
 		s:           selector.NewSelector[T](*scfg),
 		lb:          lb,
 		n:           len(lb),
-		cpw:         len(lb)/len(pq.pq) + 1,
+		cpw:         len(lb),
 		pool:        pq,
 		tcounter:    0,
 		rank:        rank,

@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"github.com/Amanuel94/crowdsort/interfaces"
-
 	"github.com/google/uuid"
 )
 
@@ -21,11 +19,7 @@ const (
 
 type Pair[T any] struct {
 	Id    uuid.UUID
-	F     interfaces.Comparable[T]
-	S     interfaces.Comparable[T]
+	F     uuid.UUID
+	S     uuid.UUID
 	Order Ord
-}
-
-func NewPair[T any](f interfaces.Comparable[T], s interfaces.Comparable[T]) *Pair[T] {
-	return &Pair[T]{Id: uuid.New(), F: f, S: s, Order: NA}
 }

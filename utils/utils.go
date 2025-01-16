@@ -4,6 +4,7 @@ package utils
 
 import (
 	"iter"
+	"sync"
 
 	"golang.org/x/exp/rand"
 )
@@ -70,4 +71,11 @@ func NextPower(x int) int {
 // randint generates a random integer in the range [a, b].
 func RandInt(a, b int) int {
 	return rand.Intn(b-a+1) + a
+}
+
+// new wait group with counter
+func NewWaitGroup(n int) *sync.WaitGroup {
+	wg := sync.WaitGroup{}
+	wg.Add(n)
+	return &wg
 }

@@ -12,6 +12,7 @@ import (
 // for printing the leaderboard as a table
 
 func printTable[T any](header []string, data []shared.IndexedItem[T]) {
+
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
 
 	fmt.Fprintln(writer, formatHeader(header))

@@ -1,12 +1,8 @@
-github.com/amanuel94/crowd-sort v0.0.0-20250109084426-654e8c499e07 h1:RU4LtL47AHte7n6UiqC9qyaCJL7/J9zol2pdYBTA4HU=
-github.com/amanuel94/crowd-sort v0.0.0-20250109084426-654e8c499e07/go.mod h1:hWEgmUcuCNxMVPs7qs98zX9okIg9j7HhYKo3bW0RpQA=
-github.com/Amanuel94/crowdsort v0.0.0-20250113143418-4b63249b7d6d h1:al9cEDbnaKcBvNaUME16xgGABGM21b1riGzM5x7jJ1M=
-github.com/Amanuel94/crowdsort v0.0.0-20250113143418-4b63249b7d6d/go.mod h1://U/YZnPuwBE5fCTLf3w6yCQTBmf2MGDDXbVj27QuFU=
-github.com/Amanuel94/crowdsort/network v0.0.0-20250113145607-bdc77636f299 h1:1g33MPhbXducxcsoll4kQtS9X2qFL6XHC+9uomVWwRw=
-github.com/Amanuel94/crowdsort/network v0.0.0-20250113145607-bdc77636f299/go.mod h1:K4qEeYpLQz7Ei3PqxqDZ96njcWmDDqLiQwUEPfr+qac=
+github.com/Amanuel94/crowdsort v0.0.0-20250113151928-861b3a415698 h1:B2eKfq6ynbxnIuVhlU3xnDSffWP31P1Zi2wu/Kh9LXU=
+github.com/Amanuel94/crowdsort v0.0.0-20250113151928-861b3a415698/go.mod h1:Em7QjBYgxvWgk4nXBj8H5jD2us2BLotYklh/7UvZFRg=
 github.com/cenkalti/backoff/v5 v5.0.0 h1:4ziwFuaVJicDO1ah1Nz1aXXV1caM28PFgf1V5TTFXew=
 github.com/cenkalti/backoff/v5 v5.0.0/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 h1:yqrTHse8TCMW1M1ZCP+VAR/l0kKxwaAIqN/il7x4voA=
-golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8/go.mod h1:tujkw807nyEEAamNbDrEGzRav+ilXA7PCRAd6xsmwiU=
+golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f h1:XdNn9LlyWAhLVp6P/i8QYBW+hlyhrhei9uErw2B5GJo=
+golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f/go.mod h1:D5SMRVC3C2/4+F/DB1wZsLRnSNimn2Sp/NPsCrsv8ak=

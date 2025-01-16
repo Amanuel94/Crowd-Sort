@@ -14,15 +14,15 @@ func TestSelector(t *testing.T) {
 
 	// sample input
 	u := []interfaces.Comparable[int]{}
-	size := utils.RandInt(2, 100)
+	size := utils.RandInt(8, 8)
 	for i := 0; i < size; i++ {
 		num := shared.NewInt(utils.RandInt(0, 100))
 		u = append(u, shared.NewIndexedItem[int](num))
 	}
 
-	m := make(map[uuid.UUID]int)
-	for ind, item := range u {
-		m[item.GetIndex().(uuid.UUID)] = ind
+	m := make(map[uuid.UUID]shared.IndexedItem[int])
+	for _, item := range u {
+		m[item.GetIndex().(uuid.UUID)] = item.(shared.IndexedItem[int])
 	}
 
 	// create selector
@@ -32,18 +32,23 @@ func TestSelector(t *testing.T) {
 	p, ok := s.Next()
 
 	for ok {
-		i, j := p.F.GetIndex().(uuid.UUID), p.S.GetIndex().(uuid.UUID)
-		pi := u[m[i]]
-		pj := u[m[j]]
+		i, j := p.F, p.S
+		pi := m[i]
+		pj := m[j]
 
-		if pi.Compare(pj) > 0 {
-			u[m[i]], u[m[j]] = u[m[j]], u[m[i]]
+		pv := pi.GetValue()
+		qv := pj.GetValue()
+
+		if pi.Compare(pj) > 0 { // pi > pj
+			pi.SetValue(qv)
+			pj.SetValue(pv)
 		}
 		s.PrepareNeighbours(p.Id)
 		p, ok = s.Next()
 	}
 
 	// check if u is sorted
+
 	for i := 0; i < size-1; i++ {
 		if u[i].Compare(u[i+1]) > 0 {
 			t.Fail()

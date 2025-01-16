@@ -2,9 +2,7 @@
 package io
 
 import (
-	"context"
 	"fmt"
-	"iter"
 
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/modules/dispatcher"
@@ -14,13 +12,12 @@ import (
 
 // Initalizes the IO module
 
-func Init[T any](cfg *Config[T]) *IO[T] {
-	fmt.Println("Initializing IO")
+func New[T any](cfg *Config[T]) *IO[T] {
+	fmt.Println("INFO: Initializing IO")
 	newIO := &IO[T]{}
-	newIO.ctx = *cfg.ctx
-	newIO.canc = *cfg.canc
 	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.IndexedItem[T] {
-		return shared.NewIndexedItem[T](*v).(*shared.IndexedItem[T])
+		item := shared.NewIndexedItem[T](*v).(shared.IndexedItem[T])
+		return &item
 	}, cfg.items)
 
 	comparators := utils.Map(func(v func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) *shared.IndexedComparator[T] {
@@ -29,75 +26,55 @@ func Init[T any](cfg *Config[T]) *IO[T] {
 
 	dcfg := dispatcher.IndexedDispatcherConfig[T](items, comparators)
 	newIO.d = dispatcher.New(dcfg)
+	newIO.msgBuffer = make([]interface{}, 0)
+	newIO.wg = utils.NewWaitGroup(2)
+
+	fmt.Println("INFO: IO Initialized")
+
 	return newIO
-}
-func (io *IO[T]) ReadItems(key IOKey) iter.Seq[shared.IndexedItem[T]] {
-	fmt.Println("Reading Values from IO-Context")
-	return io.ctx.Value(key).(iter.Seq[shared.IndexedItem[T]])
-}
-
-func (io *IO[T]) WriteFromList(values []interfaces.Comparable[T], key IOKey) {
-	asSeq := utils.SliceToSeq(values)
-	io.WriteFromSeq(asSeq, key)
-}
-
-func (io *IO[T]) WriteFromSeq(values iter.Seq[interfaces.Comparable[T]], key IOKey) {
-	indexedValues := utils.Map(func(v interfaces.Comparable[T]) shared.IndexedItem[T] {
-		return shared.NewIndexedItem[T](v).(shared.IndexedItem[T])
-	}, values)
-	if io.ctx.Value(key) == nil {
-		fmt.Println("Writing to empty IO")
-		io.ctx = context.WithValue(io.ctx, key, indexedValues)
-	} else {
-		fmt.Println("Writing to non-empty IO")
-		curr := io.ctx.Value(key).(iter.Seq[shared.IndexedItem[T]])
-		io.ctx = context.WithValue(io.ctx, key, utils.Concat(curr, indexedValues))
-	}
-	fmt.Println("Done writing")
-}
-
-func (io *IO[T]) Clear(key IOKey) {
-	io.ctx = context.WithValue(io.ctx, key, nil)
 }
 
 func (io *IO[T]) collectDispatcherMessages() {
 	for msg := range io.d.MSG {
+		fmt.Println(msg)
 		io.msgBuffer = append(io.msgBuffer, msg)
 	}
 }
 
-func (io *IO[T]) Close() {
-	fmt.Println("Closing IO")
-	io.canc()
-}
-
-func WriteInt(i *IO[int64], values []int64, key IOKey) {
-	asSeq := utils.SliceToSeq(values)
-	asComparable := utils.Map(func(v int64) interfaces.Comparable[int64] { return shared.NewInt(v) }, asSeq)
-	i.WriteFromSeq(asComparable, key)
-}
-
 func (io *IO[T]) StartDispatcher() {
 	go io.collectDispatcherMessages()
-	io.msgBuffer = append(io.msgBuffer, "Starting Dispatcher")
+	fmt.Println("INFO: Starting Dispatcher")
 	io.d.Dispatch()
+	io.wg.Done()
 }
 
-func (io *IO[T]) showCollectedMessages() {
-	for _, msg := range io.msgBuffer {
-		fmt.Println(msg)
-	}
-}
+// func (io *IO[T]) showCollectedMessages() {
+// 	for _, msg := range io.msgBuffer {
+// 		fmt.Println(msg)
+// 	}
+// }
 
 func (io *IO[T]) ShowLeaderboard() {
-	io.msgBuffer = append(io.msgBuffer, "Live Leaderboard")
+	cnt := 0
+	go io.d.UpdateLeaderboard()
 	for range io.d.Ping {
 		clearTable()
-		io.showCollectedMessages()
+		fmt.Printf("Live Leaderboard\n")
 		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard())
+		fmt.Println()
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
+		fmt.Println()
+		// io.showCollectedMessages()
+		cnt++
 
 	}
-	close(io.d.MSG)
+	fmt.Println("INFO: Leaderboard Updated", cnt)
+	io.wg.Done()
+	// close(io.d.MSG)
+
+}
+
+func (io *IO[T]) Wait() {
+	io.wg.Wait()
 
 }

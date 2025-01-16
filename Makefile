@@ -1,5 +1,5 @@
 # run program
-file := "./main.go"   
+file := "./example/main.go"   
 run: cls
 	@go run $(file)
 

@@ -32,13 +32,18 @@ func (item IndexedItem[T]) Compare(other interfaces.Comparable[T]) int {
 	return item.Value.Compare(other)
 }
 
+func (item IndexedItem[T]) SetValue(val T) {
+	item.Value.SetValue(val)
+}
+
 // Wrapper for constrained types
 type OrderedType[T constraints.Ordered] struct {
+	Index any
 	Value T
 }
 
 func (o *OrderedType[T]) GetIndex() any {
-	return o.Value
+	return o.Index
 }
 
 func (o *OrderedType[T]) GetValue() T {
@@ -54,8 +59,13 @@ func (o *OrderedType[T]) Compare(other interfaces.Comparable[T]) int {
 	return 0
 }
 
+func (o *OrderedType[T]) SetValue(val T) {
+	o.Value = val
+}
+
 func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 	return &OrderedType[T]{
+		Index: uuid.New(),
 		Value: value,
 	}
 }
@@ -90,4 +100,8 @@ func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Compar
 		cmp:      cmp,
 		task_cnt: 0,
 	}
+}
+
+func NewPair[T any](f uuid.UUID, s uuid.UUID) *Pair[T] {
+	return &Pair[T]{Id: uuid.New(), F: f, S: s, Order: NA}
 }

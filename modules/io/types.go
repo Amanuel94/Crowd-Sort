@@ -1,15 +1,14 @@
 package io
 
 import (
-	"context"
+	"sync"
 
 	"github.com/Amanuel94/crowdsort/modules/dispatcher"
 )
 
 type IO[T any] struct {
-	ctx       context.Context
-	canc      context.CancelFunc
 	d         *dispatcher.Dispatcher[T]
+	wg        *sync.WaitGroup
 	msgBuffer []interface{}
 }
 
