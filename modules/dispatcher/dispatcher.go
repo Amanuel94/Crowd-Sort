@@ -61,7 +61,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 
 func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Connector[T]) {
 	defer wg.Done()
-	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetIndex())
+	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetID())
 
 	pf := d.id2Item[pair.F]
 	ps := d.id2Item[pair.S]

@@ -9,75 +9,75 @@ import (
 
 // Wrapper for indexing items
 type Wire[T any] struct {
-	Index string // primary key
-	Value interfaces.Comparable[T]
+	index string
+	value interfaces.Comparable[T]
 }
 
 func NewWire[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
 	return Wire[T]{
-		Index: shortuuid.New(),
-		Value: value,
+		index: shortuuid.New(),
+		value: value,
 	}
 }
 
 func (item Wire[T]) GetIndex() any {
-	return item.Index
+	return item.index
 }
 
 func (item Wire[T]) GetValue() T {
-	return item.Value.GetValue()
+	return item.value.GetValue()
 }
 
 func (item Wire[T]) Compare(other interfaces.Comparable[T]) int {
-	return item.Value.Compare(other)
+	return item.value.Compare(other)
 }
 
 func (item Wire[T]) SetValue(val T) {
-	item.Value.SetValue(val)
+	item.value.SetValue(val)
 }
 
 // Wrapper for constrained types
 type OrderedType[T constraints.Ordered] struct {
-	Index any
-	Value T
+	index any
+	value T
 }
 
 func (o *OrderedType[T]) GetIndex() any {
-	return o.Index
+	return o.index
 }
 
 func (o *OrderedType[T]) GetValue() T {
-	return o.Value
+	return o.value
 }
 
 func (o *OrderedType[T]) Compare(other interfaces.Comparable[T]) int {
-	if o.Value < other.GetValue() {
+	if o.value < other.GetValue() {
 		return -1
-	} else if o.Value > other.GetValue() {
+	} else if o.value > other.GetValue() {
 		return 1
 	}
 	return 0
 }
 
 func (o *OrderedType[T]) SetValue(val T) {
-	o.Value = val
+	o.value = val
 }
 
 func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 	return &OrderedType[T]{
-		Index: shortuuid.New(),
-		Value: value,
+		index: nil,
+		value: value,
 	}
 }
 
 type ComparatorModule[T any] struct {
-	index    string
+	pid      string
 	cmp      func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
 	task_cnt int
 }
 
-func (ic ComparatorModule[T]) GetIndex() any {
-	return ic.index
+func (ic ComparatorModule[T]) GetID() any {
+	return ic.pid
 }
 
 func (ic ComparatorModule[T]) CompareEntries(f *interfaces.Comparable[T], s *interfaces.Comparable[T]) (int, error) {
@@ -96,7 +96,7 @@ func (ic ComparatorModule[T]) TaskCount() int {
 
 func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) interfaces.Comparator[T] {
 	return &ComparatorModule[T]{
-		index:    shortuuid.New(),
+		pid:      shortuuid.New(),
 		cmp:      cmp,
 		task_cnt: 0,
 	}

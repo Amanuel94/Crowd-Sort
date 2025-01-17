@@ -11,7 +11,7 @@ type Comparable[T any] interface {
 // wrapper for  comparator modules
 
 type Comparator[T any] interface {
-	GetIndex() any
+	GetID() any
 	CompareEntries(*Comparable[T], *Comparable[T]) (int, error)
 	Assigned()
 	TaskCount() int

@@ -1,8 +1,5 @@
 package shared
 
-// wrapper for pair
-// ****************************************************
-
 // enum for score
 type Ord = int
 
