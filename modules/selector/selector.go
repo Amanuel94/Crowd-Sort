@@ -29,6 +29,7 @@ func (s *Selector[T]) NPairs() int {
 	return len(s.g.nodes)
 }
 
+// Graph for persistence
 func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 	defer deferPanic(&s.MSG)
@@ -36,6 +37,7 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 	n_nodes := len(u)
 	pair_indices := BEMS_pairs_generator(n_nodes, 1, 0, &s.MSG)
+
 	pmap := make(map[string]string)
 	for _, pi := range pair_indices {
 		i, j := pi[0], pi[1]
@@ -47,12 +49,15 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 		fprev, fok := pmap[pair.F]
 		sprev, sok := pmap[pair.S]
+
 		if fok {
 			s.g.addEdge(fprev, pair.Id, &s.MSG)
 		}
+
 		if sok {
 			s.g.addEdge(sprev, pair.Id, &s.MSG)
 		}
+
 		pmap[pair.F] = pair.Id
 		pmap[pair.S] = pair.Id
 	}
@@ -77,6 +82,7 @@ func (s *Selector[T]) PrepareNeighbours(id string) {
 	node, ok := s.g.m[id]
 	defer deferPanic(&s.MSG)
 	argue(ok, "Node not found")
+
 	for _, neighbour := range node.neighbours {
 		neighbour.adj--
 		if neighbour.adj == 0 {

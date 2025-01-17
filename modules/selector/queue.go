@@ -30,7 +30,7 @@ func (q *queue[T]) enqueue(value T) {
 }
 
 func (q *queue[T]) dequeue(msg *chan interface{}) T {
-	deferPanic(msg)
+	defer deferPanic(msg)
 	argue(q.size > 0, "Empty queue")
 	node := q.head.next
 	q.head.next = node.next
