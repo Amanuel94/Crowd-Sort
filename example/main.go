@@ -25,7 +25,6 @@ func main() {
 	io_cfg := io.NewConfig(items, comparators)
 	io := io.New(io_cfg)
 	go io.StartDispatcher()
-	// go io.d.UpdateLeaderboard()
 	go io.ShowLeaderboard()
 	io.Wait()
 
