@@ -72,7 +72,7 @@ func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 
 type ComparatorModule[T any] struct {
 	pid      string
-	cmp      func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
+	cmp      CmpFunc[T]
 	task_cnt int
 }
 
@@ -94,7 +94,7 @@ func (ic ComparatorModule[T]) TaskCount() int {
 
 // Constructor for Creating Comparator Modules
 
-func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) interfaces.Comparator[T] {
+func NewComparator[T any](cmp CmpFunc[T]) interfaces.Comparator[T] {
 	return &ComparatorModule[T]{
 		pid:      shortuuid.New(),
 		cmp:      cmp,

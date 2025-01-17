@@ -2,6 +2,9 @@ package dispatcher
 
 import (
 	"errors"
+	"fmt"
+
+	"github.com/TreyBastian/colourize"
 )
 
 // custom errors for debugging
@@ -15,7 +18,8 @@ func backoffError(v bool, msg string) error {
 
 func argue(v bool, msg string) {
 	if !v {
-		panic("DISPATCHER ERROR: " + msg)
+		error_msg := fmt.Sprintf(colourize.Colourize("[ERROR]: %v", colourize.Red), msg)
+		panic(error_msg)
 	}
 
 }

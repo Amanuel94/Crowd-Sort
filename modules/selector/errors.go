@@ -1,5 +1,11 @@
 package selector
 
+import (
+	"fmt"
+
+	"github.com/TreyBastian/colourize"
+)
+
 // custom errors for debugging
 
 func argue(v bool, msg string) {
@@ -10,6 +16,7 @@ func argue(v bool, msg string) {
 
 func deferPanic(msg *chan interface{}) {
 	if r := recover(); r != nil {
-		(*msg) <- r
+		error_msg := fmt.Sprintf(colourize.Colourize("[ERROR]: %v", colourize.Red), r)
+		(*msg) <- error_msg
 	}
 }

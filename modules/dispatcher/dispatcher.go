@@ -12,11 +12,6 @@ import (
 	"github.com/cenkalti/backoff/v5"
 )
 
-// Batches from Selector
-// Takes Process + Pair
-// Calls PrepareNeighbours
-// Maintains Leaderboard
-
 type Dispatcher[T any] struct {
 	s        *selector.Selector[T]
 	lb       [](any)
@@ -47,21 +42,24 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	items := []interfaces.Comparable[T]{}
 	for i, item := range d.lb {
 		idx := i
-		item_intf := item.(interfaces.Comparable[T])
-		items = append(items, item_intf)
-		item_indxd := item.(*shared.Wire[T])
-		d.id2Item[(*item_indxd).GetIndex()] = &item_intf
-		d.rank[(*item_indxd).GetIndex()] = idx
+		itemComparable := item.(interfaces.Comparable[T])
+		items = append(items, itemComparable)
+		itemWire := item.(*shared.Wire[T])
+		itemIndex := itemWire.GetIndex()
+		d.id2Item[itemIndex] = &itemComparable
+		d.rank[itemIndex] = idx
 	}
+
 	d.s.CreateGraph(items)
 	d.n = d.s.NPairs()
-	// fmt.Println(d.n)
+
 	return d
 }
 
 func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Connector[T]) {
+	defer deferPanic(&d.MSG)
 	defer wg.Done()
-	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetID())
+	d.MSG <- "[INFO]: Assigning tasks"
 
 	pf := d.id2Item[pair.F]
 	ps := d.id2Item[pair.S]
@@ -89,7 +87,7 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool)) func() (*shared.Connector[T], error) {
 	get_ready_result := func() (*shared.Connector[T], error) {
 		res, ok := attr()
-		d.MSG <- fmt.Sprintf("DISPATCHER INFO: %s", "Waiting for new tasks")
+		d.MSG <- fmt.Sprintf("[INFO]: %s", "awaiting for new tasks")
 		if !ok {
 			return nil, backoffError(ok, "No ready tasks")
 		}
@@ -124,9 +122,8 @@ func (d *Dispatcher[T]) Dispatch() {
 
 	}
 	wg.Wait()
-	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Finished dispatching %d tasks", d.tcounter)
+	d.MSG <- fmt.Sprintf("[INFO]: Finished dispatching %d tasks", d.tcounter)
 	close(d.channel)
-	// close(d.MSG)
 
 }
 
@@ -148,13 +145,12 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 		d.Ping <- *pair
 	}
 
-	d.MSG <- fmt.Sprintf("INFO : %d tasks completed", count)
+	d.MSG <- fmt.Sprintf("[INFO] : %d tasks completed", count)
 	close(d.Ping)
 }
 
 func (d *Dispatcher[T]) GetLeaderboard() [](shared.Wire[T]) {
 	lb := make([]shared.Wire[T], len(d.lb))
-
 	for i, item := range d.lb {
 		lb[i] = *(item.(*shared.Wire[T]))
 	}

@@ -20,11 +20,11 @@ func New[T any](cfg *Config[T]) *IO[T] {
 		return &item
 	}, cfg.items)
 
-	comparators := utils.Map(func(v func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) *shared.ComparatorModule[T] {
+	comparators := utils.Map(func(v shared.CmpFunc[T]) *shared.ComparatorModule[T] {
 		return shared.NewComparator[T](v).(*shared.ComparatorModule[T])
 	}, cfg.comparators)
 
-	dcfg := dispatcher.IndexedDispatcherConfig[T](items, comparators)
+	dcfg := dispatcher.IntDispatcherConfig[T](items, comparators)
 	newIO.d = dispatcher.New(dcfg)
 	newIO.msgBuffer = make([]interface{}, 0)
 	newIO.wg = utils.NewWaitGroup(2)

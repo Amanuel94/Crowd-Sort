@@ -4,14 +4,15 @@ import (
 	"iter"
 
 	"github.com/Amanuel94/crowdsort/interfaces"
+	"github.com/Amanuel94/crowdsort/shared"
 )
 
 type Config[T any] struct {
 	items       iter.Seq[*interfaces.Comparable[T]]
-	comparators iter.Seq[func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)]
+	comparators iter.Seq[shared.CmpFunc[T]]
 }
 
-func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators iter.Seq[func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)]) *Config[T] {
+func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators iter.Seq[shared.CmpFunc[T]]) *Config[T] {
 
 	return &Config[T]{
 		items:       items,

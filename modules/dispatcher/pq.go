@@ -34,6 +34,10 @@ func FromSeq[T any](processes iter.Seq[*shared.ComparatorModule[T]]) *pq[T] {
 	return pq
 }
 
+func (p *pq[T]) Len() int {
+	return len(p.pq)
+}
+
 func (p *pq[T]) Push(item interfaces.Comparator[T]) {
 	p.pq = append(p.pq, &item)
 	for i := len(p.pq) - 1; i > 0; {

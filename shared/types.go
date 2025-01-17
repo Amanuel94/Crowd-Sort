@@ -1,5 +1,7 @@
 package shared
 
+import "github.com/Amanuel94/crowdsort/interfaces"
+
 // enum for score
 type Ord = int
 
@@ -16,3 +18,5 @@ type Connector[T any] struct {
 	S     string
 	Order Ord
 }
+
+type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)

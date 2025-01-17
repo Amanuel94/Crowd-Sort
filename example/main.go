@@ -46,9 +46,9 @@ func generateItems(n int) iter.Seq[*interfaces.Comparable[int]] {
 
 }
 
-func generateComparators(n int) iter.Seq[func(*interfaces.Comparable[int], *interfaces.Comparable[int]) (int, error)] {
+func generateComparators(n int) iter.Seq[shared.CmpFunc[int]] {
 
-	comparators := make([]func(*interfaces.Comparable[int], *interfaces.Comparable[int]) (int, error), n)
+	comparators := make([]shared.CmpFunc[int], n)
 
 	for i := 0; i < n; i++ {
 		index := i
