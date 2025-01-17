@@ -102,6 +102,10 @@ func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Compar
 	}
 }
 
-func NewPair[T any](f string, s string) *Connector[T] {
+func NewConnector[T any](f string, s string) *Connector[T] {
 	return &Connector[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
+}
+
+func (c *Connector[T]) GetKey() string {
+	return c.Id
 }

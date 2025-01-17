@@ -6,7 +6,7 @@ import (
 )
 
 type Selector[T any] struct {
-	g       *graph[T]
+	g       *graph[*shared.Connector[T]]
 	q       *queue[*shared.Connector[T]]
 	alg     string
 	batched bool
@@ -17,7 +17,7 @@ type Selector[T any] struct {
 func NewSelector[T any](cfg Config) *Selector[T] {
 
 	return &Selector[T]{
-		g:       NewGraph[T](),
+		g:       NewGraph[*shared.Connector[T]](),
 		q:       NewQueue[*shared.Connector[T]](),
 		alg:     cfg.alg,
 		batched: false,
@@ -31,7 +31,7 @@ func (s *Selector[T]) NPairs() int {
 
 func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
-	deferPanic(&s.MSG)
+	defer deferPanic(&s.MSG)
 	argue(len(u) > 0, "Empty input")
 
 	n_nodes := len(u)
@@ -42,8 +42,8 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 		if i >= n_nodes || j >= n_nodes {
 			continue
 		}
-		pair := shared.NewPair[T](u[i].GetIndex().(string), u[j].GetIndex().(string))
-		s.g.addNode(pair)
+		pair := shared.NewConnector[T](u[i].GetIndex().(string), u[j].GetIndex().(string))
+		s.g.addNode(&pair)
 
 		fprev, fok := pmap[pair.F]
 		sprev, sok := pmap[pair.S]
@@ -75,12 +75,12 @@ func (s *Selector[T]) Next() (*shared.Connector[T], bool) {
 // Enqueue pairs with 0 dependencies
 func (s *Selector[T]) PrepareNeighbours(id string) {
 	node, ok := s.g.m[id]
-	deferPanic(&s.MSG)
+	defer deferPanic(&s.MSG)
 	argue(ok, "Node not found")
 	for _, neighbour := range node.neighbours {
 		neighbour.adj--
 		if neighbour.adj == 0 {
-			s.q.enqueue(neighbour.value)
+			s.q.enqueue(*neighbour.value)
 		}
 	}
 
@@ -90,7 +90,7 @@ func (s *Selector[T]) firstBatch() {
 
 	for _, node := range s.g.nodes {
 		if node.adj == 0 {
-			s.q.enqueue(node.value)
+			s.q.enqueue(*node.value)
 		}
 	}
 

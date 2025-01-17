@@ -2,35 +2,33 @@
 
 package selector
 
-import (
-	"github.com/Amanuel94/crowdsort/shared"
-)
+import "github.com/Amanuel94/crowdsort/interfaces"
 
-type node[T any] struct {
-	value      *shared.Connector[T]
+type node[T interfaces.Keyed] struct {
+	value      *T
 	neighbours []*node[T]
 	adj        int
 }
 
-type graph[T any] struct {
+type graph[T interfaces.Keyed] struct {
 	nodes []*node[T]
 	m     map[string]*node[T]
 }
 
-func NewGraph[T any]() *graph[T] {
+func NewGraph[T interfaces.Keyed]() *graph[T] {
 	return &graph[T]{
 		nodes: []*node[T]{},
 		m:     make(map[string]*node[T]),
 	}
 }
 
-func (g *graph[T]) addNode(u *shared.Connector[T]) *node[T] {
+func (g *graph[T]) addNode(u *T) *node[T] {
 	n := &node[T]{
 		value:      u,
 		neighbours: []*node[T]{},
 	}
 	g.nodes = append(g.nodes, n)
-	g.m[u.Id] = n
+	g.m[(*u).GetKey()] = n
 	return n
 }
 
@@ -42,7 +40,7 @@ func (g *graph[T]) addEdge(src_id string, dest_id string, msg *chan interface{})
 	deferPanic(msg)
 	argue(oku && okv, "Nodes not found")
 	for _, neighbour := range nsrc.neighbours {
-		if neighbour.value.Id == dest_id {
+		if (*neighbour.value).GetKey() == dest_id {
 			return
 		}
 	}

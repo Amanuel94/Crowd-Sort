@@ -16,3 +16,7 @@ type Comparator[T any] interface {
 	Assigned()
 	TaskCount() int
 }
+
+type Keyed interface {
+	GetKey() string
+}
