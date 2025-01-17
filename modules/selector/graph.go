@@ -7,7 +7,7 @@ import (
 )
 
 type Node[T any] struct {
-	Value      *shared.Pair[T]
+	Value      *shared.Connector[T]
 	Neighbours []*Node[T]
 	Adj        int
 }
@@ -24,7 +24,7 @@ func NewGraph[T any]() *Graph[T] {
 	}
 }
 
-func (g *Graph[T]) AddNode(u *shared.Pair[T]) *Node[T] {
+func (g *Graph[T]) AddNode(u *shared.Connector[T]) *Node[T] {
 	n := &Node[T]{
 		Value:      u,
 		Neighbours: []*Node[T]{},

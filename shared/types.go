@@ -13,7 +13,7 @@ const (
 	GT
 )
 
-type Pair[T any] struct {
+type Connector[T any] struct {
 	Id    string
 	F     string
 	S     string

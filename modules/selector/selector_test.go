@@ -15,12 +15,12 @@ func TestSelector(t *testing.T) {
 	size := utils.RandInt(8, 8)
 	for i := 0; i < size; i++ {
 		num := shared.NewInt(utils.RandInt(0, 100))
-		u = append(u, shared.NewIndexedItem[int](num))
+		u = append(u, shared.NewWire[int](num))
 	}
 
-	m := make(map[string]shared.IndexedItem[int])
+	m := make(map[string]shared.Wire[int])
 	for _, item := range u {
-		m[item.GetIndex().(string)] = item.(shared.IndexedItem[int])
+		m[item.GetIndex().(string)] = item.(shared.Wire[int])
 	}
 
 	// create selector

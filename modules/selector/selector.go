@@ -7,12 +7,12 @@ import (
 
 type Selector[T any] struct {
 	g       *Graph[T]
-	q       *queue[*shared.Pair[T]]
+	q       *queue[*shared.Connector[T]]
 	alg     string
 	batched bool
 	MSG     chan interface{}
 	Rank    map[string]int
-	I2I     map[string]*shared.IndexedItem[T]
+	I2I     map[string]*shared.Wire[T]
 }
 
 // TODO: Implement bitonic sort and shell sort
@@ -20,7 +20,7 @@ func NewSelector[T any](cfg Config) *Selector[T] {
 	argue(cfg.alg == "BEMS", "Invalid algorithm name")
 	return &Selector[T]{
 		g:       NewGraph[T](),
-		q:       NewQueue[*shared.Pair[T]](),
+		q:       NewQueue[*shared.Connector[T]](),
 		alg:     cfg.alg,
 		batched: false,
 		Rank:    make(map[string]int),
@@ -34,7 +34,7 @@ func (s *Selector[T]) NPairs() int {
 func (s *Selector[T]) RegisterItems(u [](interfaces.Comparable[T])) {
 	for i, item := range u {
 		s.Rank[item.GetIndex().(string)] = i
-		s.I2I[item.GetIndex().(string)] = item.(*shared.IndexedItem[T])
+		s.I2I[item.GetIndex().(string)] = item.(*shared.Wire[T])
 	}
 }
 
@@ -68,14 +68,14 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 
 }
 
-func (s *Selector[T]) Next() (*shared.Pair[T], bool) {
+func (s *Selector[T]) Next() (*shared.Connector[T], bool) {
 
 	if !s.batched {
 		s.firstBatch()
 		s.batched = true
 	}
 	if s.q.size == 0 {
-		return &shared.Pair[T]{}, false
+		return &shared.Connector[T]{}, false
 	}
 
 	return s.q.Dequeue(&s.MSG), true

@@ -15,13 +15,13 @@ import (
 func New[T any](cfg *Config[T]) *IO[T] {
 	fmt.Println("INFO: Initializing IO")
 	newIO := &IO[T]{}
-	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.IndexedItem[T] {
-		item := shared.NewIndexedItem[T](*v).(shared.IndexedItem[T])
+	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.Wire[T] {
+		item := shared.NewWire[T](*v).(shared.Wire[T])
 		return &item
 	}, cfg.items)
 
-	comparators := utils.Map(func(v func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) *shared.IndexedComparator[T] {
-		return shared.NewComparator[T](v).(*shared.IndexedComparator[T])
+	comparators := utils.Map(func(v func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) *shared.ComparatorModule[T] {
+		return shared.NewComparator[T](v).(*shared.ComparatorModule[T])
 	}, cfg.comparators)
 
 	dcfg := dispatcher.IndexedDispatcherConfig[T](items, comparators)

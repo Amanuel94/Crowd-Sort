@@ -26,7 +26,7 @@ func FromList[T any](processes []*(interfaces.Comparator[T])) *pq[T] {
 
 }
 
-func FromSeq[T any](processes iter.Seq[*shared.IndexedComparator[T]]) *pq[T] {
+func FromSeq[T any](processes iter.Seq[*shared.ComparatorModule[T]]) *pq[T] {
 	pq := NewPQ[T]()
 	for process := range processes {
 		pq.Push(process)

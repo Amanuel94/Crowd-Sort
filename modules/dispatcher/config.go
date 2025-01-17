@@ -16,11 +16,11 @@ type DispatcherConfig[T any] struct {
 	pool        *pq[T]      // should contain already defined workers/processes
 	tcounter    int         // number of assigned tasks
 	rank        map[any]int // maps id to rank
-	channel     chan *shared.Pair[T]
+	channel     chan *shared.Connector[T]
 	refresh_cnt int
 }
 
-func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], processes iter.Seq[*shared.IndexedComparator[T]]) *DispatcherConfig[T] {
+func IndexedDispatcherConfig[T any](items iter.Seq[*shared.Wire[T]], processes iter.Seq[*shared.ComparatorModule[T]]) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)
@@ -42,7 +42,7 @@ func IndexedDispatcherConfig[T any](items iter.Seq[*shared.IndexedItem[T]], proc
 		pool:        pq,
 		tcounter:    0,
 		rank:        rank,
-		channel:     make(chan *shared.Pair[T]),
+		channel:     make(chan *shared.Connector[T]),
 		refresh_cnt: 0,
 	}
 

@@ -12,7 +12,7 @@ import (
 
 // for printing the leaderboard as a table
 
-func printTable[T any](header []string, data []shared.IndexedItem[T], p shared.Pair[T]) {
+func printTable[T any](header []string, data []shared.Wire[T], p shared.Connector[T]) {
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
 
@@ -30,7 +30,7 @@ func formatHeader(header []string) string {
 	return fmt.Sprintf("%s\t%v\t", header[0], header[1])
 }
 
-func formatRow[T any](item shared.IndexedItem[T], p shared.Pair[T]) string {
+func formatRow[T any](item shared.Wire[T], p shared.Connector[T]) string {
 	color := colourize.White
 	if item.GetIndex() == p.F || item.GetIndex() == p.S {
 		color = colourize.Green

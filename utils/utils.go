@@ -54,6 +54,7 @@ func Bit_count(x int) int {
 	return count
 }
 
+// bit length
 func Bit_Len(x int) int {
 	count := 0
 	for x != 0 {

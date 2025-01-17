@@ -25,9 +25,9 @@ type Dispatcher[T any] struct {
 	pool     *pq[T]      // should contain already defined workers/processes
 	tcounter int         // number of assigned tasks
 	rank     map[any]int // maps id to rank
-	channel  chan *shared.Pair[T]
+	channel  chan *shared.Connector[T]
 	id2Item  map[any]*interfaces.Comparable[T]
-	Ping     chan shared.Pair[T]
+	Ping     chan shared.Connector[T]
 	MSG      chan interface{}
 }
 
@@ -41,7 +41,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		rank:     cfg.rank,
 		channel:  cfg.channel,
 		id2Item:  make(map[any]*interfaces.Comparable[T]),
-		Ping:     make(chan shared.Pair[T]),
+		Ping:     make(chan shared.Connector[T]),
 		MSG:      make(chan interface{}),
 	}
 	items := []interfaces.Comparable[T]{}
@@ -49,7 +49,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		idx := i
 		item_intf := item.(interfaces.Comparable[T])
 		items = append(items, item_intf)
-		item_indxd := item.(*shared.IndexedItem[T])
+		item_indxd := item.(*shared.Wire[T])
 		d.id2Item[(*item_indxd).GetIndex()] = &item_intf
 		d.rank[(*item_indxd).GetIndex()] = idx
 	}
@@ -59,7 +59,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	return d
 }
 
-func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Pair[T]) {
+func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Connector[T]) {
 	defer wg.Done()
 	d.MSG <- fmt.Sprintf("DISPATCHER INFO: Assigning %v to %v", pair.Id, (*worker).GetIndex())
 
@@ -86,8 +86,8 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 	}
 }
 
-func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Pair[T], bool)) func() (*shared.Pair[T], error) {
-	get_ready_result := func() (*shared.Pair[T], error) {
+func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool)) func() (*shared.Connector[T], error) {
+	get_ready_result := func() (*shared.Connector[T], error) {
 		res, ok := attr()
 		d.MSG <- fmt.Sprintf("DISPATCHER INFO: %s", "Waiting for new tasks")
 		if !ok {
@@ -132,7 +132,7 @@ func (d *Dispatcher[T]) Dispatch() {
 
 func (d *Dispatcher[T]) UpdateLeaderboard() {
 	count := 0
-	deferPanic(&d.MSG)
+	defer deferPanic(&d.MSG)
 	for pair := range d.channel {
 		d.s.PrepareNeighbours(pair.Id)
 		res := (*pair).Order
@@ -152,11 +152,11 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 	close(d.Ping)
 }
 
-func (d *Dispatcher[T]) GetLeaderboard() [](shared.IndexedItem[T]) {
-	lb := make([]shared.IndexedItem[T], len(d.lb))
+func (d *Dispatcher[T]) GetLeaderboard() [](shared.Wire[T]) {
+	lb := make([]shared.Wire[T], len(d.lb))
 
 	for i, item := range d.lb {
-		lb[i] = *(item.(*shared.IndexedItem[T]))
+		lb[i] = *(item.(*shared.Wire[T]))
 	}
 
 	return lb

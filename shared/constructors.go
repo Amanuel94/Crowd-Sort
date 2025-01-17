@@ -8,31 +8,31 @@ import (
 )
 
 // Wrapper for indexing items
-type IndexedItem[T any] struct {
+type Wire[T any] struct {
 	Index string // primary key
 	Value interfaces.Comparable[T]
 }
 
-func NewIndexedItem[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
-	return IndexedItem[T]{
+func NewWire[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
+	return Wire[T]{
 		Index: shortuuid.New(),
 		Value: value,
 	}
 }
 
-func (item IndexedItem[T]) GetIndex() any {
+func (item Wire[T]) GetIndex() any {
 	return item.Index
 }
 
-func (item IndexedItem[T]) GetValue() T {
+func (item Wire[T]) GetValue() T {
 	return item.Value.GetValue()
 }
 
-func (item IndexedItem[T]) Compare(other interfaces.Comparable[T]) int {
+func (item Wire[T]) Compare(other interfaces.Comparable[T]) int {
 	return item.Value.Compare(other)
 }
 
-func (item IndexedItem[T]) SetValue(val T) {
+func (item Wire[T]) SetValue(val T) {
 	item.Value.SetValue(val)
 }
 
@@ -70,38 +70,38 @@ func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 	}
 }
 
-type IndexedComparator[T any] struct {
+type ComparatorModule[T any] struct {
 	index    string
 	cmp      func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
 	task_cnt int
 }
 
-func (ic IndexedComparator[T]) GetIndex() any {
+func (ic ComparatorModule[T]) GetIndex() any {
 	return ic.index
 }
 
-func (ic IndexedComparator[T]) CompareEntries(f *interfaces.Comparable[T], s *interfaces.Comparable[T]) (int, error) {
+func (ic ComparatorModule[T]) CompareEntries(f *interfaces.Comparable[T], s *interfaces.Comparable[T]) (int, error) {
 	return ic.cmp(f, s)
 }
 
-func (ic *IndexedComparator[T]) Assigned() {
+func (ic *ComparatorModule[T]) Assigned() {
 	(ic).task_cnt++
 }
 
-func (ic IndexedComparator[T]) TaskCount() int {
+func (ic ComparatorModule[T]) TaskCount() int {
 	return ic.task_cnt
 }
 
 // Constructor for Creating Comparator Modules
 
 func NewComparator[T any](cmp func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)) interfaces.Comparator[T] {
-	return &IndexedComparator[T]{
+	return &ComparatorModule[T]{
 		index:    shortuuid.New(),
 		cmp:      cmp,
 		task_cnt: 0,
 	}
 }
 
-func NewPair[T any](f string, s string) *Pair[T] {
-	return &Pair[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
+func NewPair[T any](f string, s string) *Connector[T] {
+	return &Connector[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
 }
