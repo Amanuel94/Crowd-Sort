@@ -13,7 +13,7 @@ import (
 // Initalizes the IO module
 
 func New[T any](cfg *Config[T]) *IO[T] {
-	fmt.Println("INFO: Initializing IO")
+	fmt.Println("[INFO]: Initializing IO")
 	newIO := &IO[T]{}
 	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.Wire[T] {
 		item := shared.NewWire[T](*v).(shared.Wire[T])
@@ -29,7 +29,7 @@ func New[T any](cfg *Config[T]) *IO[T] {
 	newIO.msgBuffer = make([]interface{}, 0)
 	newIO.wg = utils.NewWaitGroup(2)
 
-	fmt.Println("INFO: IO Initialized")
+	fmt.Println("[INFO]: IO Initialized")
 
 	return newIO
 }
@@ -57,6 +57,7 @@ func (io *IO[T]) ShowLeaderboard() {
 		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
 		fmt.Println()
 		printUpdate(p)
+		fmt.Println()
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 		fmt.Println()
 		// io.showCollectedMessages()
