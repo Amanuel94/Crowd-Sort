@@ -22,14 +22,14 @@ func NewQueue[T any]() *queue[T] {
 	}
 }
 
-func (q *queue[T]) Enqueue(value T) {
+func (q *queue[T]) enqueue(value T) {
 	node := &listNode[T]{value: value}
 	q.tail.next.next = node
 	q.tail.next = node
 	q.size++
 }
 
-func (q *queue[T]) Dequeue(msg *chan interface{}) T {
+func (q *queue[T]) dequeue(msg *chan interface{}) T {
 	deferPanic(msg)
 	argue(q.size > 0, "Empty queue")
 	node := q.head.next

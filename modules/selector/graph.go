@@ -6,46 +6,46 @@ import (
 	"github.com/Amanuel94/crowdsort/shared"
 )
 
-type Node[T any] struct {
-	Value      *shared.Connector[T]
-	Neighbours []*Node[T]
-	Adj        int
+type node[T any] struct {
+	value      *shared.Connector[T]
+	neighbours []*node[T]
+	adj        int
 }
 
-type Graph[T any] struct {
-	Nodes []*Node[T]
-	m     map[string]*Node[T]
+type graph[T any] struct {
+	nodes []*node[T]
+	m     map[string]*node[T]
 }
 
-func NewGraph[T any]() *Graph[T] {
-	return &Graph[T]{
-		Nodes: []*Node[T]{},
-		m:     make(map[string]*Node[T]),
+func NewGraph[T any]() *graph[T] {
+	return &graph[T]{
+		nodes: []*node[T]{},
+		m:     make(map[string]*node[T]),
 	}
 }
 
-func (g *Graph[T]) AddNode(u *shared.Connector[T]) *Node[T] {
-	n := &Node[T]{
-		Value:      u,
-		Neighbours: []*Node[T]{},
+func (g *graph[T]) addNode(u *shared.Connector[T]) *node[T] {
+	n := &node[T]{
+		value:      u,
+		neighbours: []*node[T]{},
 	}
-	g.Nodes = append(g.Nodes, n)
+	g.nodes = append(g.nodes, n)
 	g.m[u.Id] = n
 	return n
 }
 
-func (g *Graph[T]) AddEdge(src_id string, dest_id string, msg *chan interface{}) {
+func (g *graph[T]) addEdge(src_id string, dest_id string, msg *chan interface{}) {
 
 	nsrc, oku := g.m[src_id]
 	ndest, okv := g.m[dest_id]
 
 	deferPanic(msg)
 	argue(oku && okv, "Nodes not found")
-	for _, neighbour := range nsrc.Neighbours {
-		if neighbour.Value.Id == dest_id {
+	for _, neighbour := range nsrc.neighbours {
+		if neighbour.value.Id == dest_id {
 			return
 		}
 	}
-	nsrc.Neighbours = append(nsrc.Neighbours, ndest)
-	ndest.Adj++
+	nsrc.neighbours = append(nsrc.neighbours, ndest)
+	ndest.adj++
 }
