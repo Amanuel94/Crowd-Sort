@@ -54,7 +54,7 @@ func generateComparators(n int) iter.Seq[shared.CmpFunc[int]] {
 		index := i
 		comparators[index] = func(a *interfaces.Comparable[int], b *interfaces.Comparable[int]) (int, error) {
 
-			w := utils.RandInt(1, 5)
+			w := utils.RandInt(3, 5)
 			waitTime := time.Duration(w) * time.Second
 			time.Sleep(waitTime)
 			return (*a).Compare(*b), nil

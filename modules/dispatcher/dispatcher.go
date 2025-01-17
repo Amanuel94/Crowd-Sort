@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/modules/selector"
@@ -59,7 +60,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Connector[T]) {
 	defer deferPanic(&d.MSG)
 	defer wg.Done()
-	d.MSG <- "[INFO]: Assigning tasks"
+	d.MSG <- "[INFO]: Tasks arrived. Assigning tasks."
 
 	pf := d.id2Item[pair.F]
 	ps := d.id2Item[pair.S]
@@ -74,6 +75,8 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 		pair.Order = shared.EQ
 	}
 
+	d.MSG <- fmt.Sprintf("[INFO]: Comparator %s submitted.", (*worker).GetID())
+
 	d.channel <- pair
 
 }
@@ -84,10 +87,10 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 	}
 }
 
-func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool)) func() (*shared.Connector[T], error) {
+func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool), worker *interfaces.Comparator[T]) func() (*shared.Connector[T], error) {
 	get_ready_result := func() (*shared.Connector[T], error) {
 		res, ok := attr()
-		d.MSG <- fmt.Sprintf("[INFO]: %s", "awaiting for new tasks")
+		d.MSG <- fmt.Sprintf("[INFO]: %v is awaiting for new tasks", (*worker).GetID())
 		if !ok {
 			return nil, backoffError(ok, "No ready tasks")
 		}
@@ -107,15 +110,20 @@ func (d *Dispatcher[T]) Dispatch() {
 
 	for d.tcounter < d.n {
 
-		pair, err := backoff.Retry(context.TODO(), d.get_ready_result(d.s.Next))
-		if err != nil {
-			panic(err)
-		}
 		worker := d.pool.Pop()
 		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
 			worker = d.pool.Pop()
 		}
+
+		bo := backoff.NewExponentialBackOff()
+		bo.InitialInterval = 2 * time.Second
+		opts := backoff.WithBackOff(bo)
+		pair, err := backoff.Retry(context.TODO(), d.get_ready_result(d.s.Next, worker), opts)
+		if err != nil {
+			panic(err)
+		}
 		go d.assign(&wg, worker, pair)
+		pair.AssignieeId = (*worker).GetID().(string)
 		(*worker).Assigned()
 		d.pool.Push(*worker)
 		d.tcounter++

@@ -13,10 +13,11 @@ const (
 )
 
 type Connector[T any] struct {
-	Id    string
-	F     string
-	S     string
-	Order Ord
+	Id          string
+	F           string
+	S           string
+	Order       Ord
+	AssignieeId string
 }
 
 type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)

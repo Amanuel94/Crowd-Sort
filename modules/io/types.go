@@ -11,7 +11,3 @@ type IO[T any] struct {
 	wg        *sync.WaitGroup
 	msgBuffer []interface{}
 }
-
-type IOKey struct {
-	Key string
-}

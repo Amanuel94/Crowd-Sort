@@ -48,31 +48,31 @@ func (io *IO[T]) StartDispatcher() {
 	io.wg.Done()
 }
 
-// func (io *IO[T]) showCollectedMessages() {
-// 	for _, msg := range io.msgBuffer {
-// 		fmt.Println(msg)
-// 	}
-// }
-
 func (io *IO[T]) ShowLeaderboard() {
 	cnt := 0
 	go io.d.UpdateLeaderboard()
 	for p := range io.d.Ping {
 		clearTable()
-		fmt.Printf("Live Leaderboard\n")
-		printTable([]string{"Index", "Value"}, io.d.GetLeaderboard(), p)
+		fmt.Printf("Live Leaderboard\n\n")
+		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
 		fmt.Println()
+		printUpdate(p)
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 		fmt.Println()
 		// io.showCollectedMessages()
 		cnt++
 
 	}
-	fmt.Println("INFO: Leaderboard Updated", cnt)
+	fmt.Println("INFO: Final Leaderboard ", cnt)
 	io.wg.Done()
-	// close(io.d.MSG)
 
 }
+
+// func (io *IO[T]) showCollectedMessages() {
+// 	for _, msg := range io.msgBuffer {
+// 		fmt.Println(msg)
+// 	}
+// }
 
 func (io *IO[T]) Wait() {
 	io.wg.Wait()
