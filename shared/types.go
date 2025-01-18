@@ -19,6 +19,7 @@ const (
 
 type Status = string
 type MessageType = int
+type ComparatorStatus = string
 
 func Assigned(assignee string) Status {
 	return Status(fmt.Sprintf("ASSIGNED TO: %s", assignee))
@@ -30,8 +31,16 @@ const (
 )
 
 const (
+	ComparatorStatusIdle ComparatorStatus = "IDLE"
+	ComparatorStatusBusy ComparatorStatus = "BUSY"
+	ComparatorStatusDone ComparatorStatus = "DONE"
+	ComparatorStatusFail ComparatorStatus = "OVERFLOW"
+)
+
+const (
 	TaskStatusUpdate MessageType = iota
 	LeaderboardUpdate
+	ComparatorStatusUpdate
 )
 
 // Wrapper for indexing items
@@ -48,6 +57,7 @@ type ComparatorModule[T any] struct {
 	pid      string
 	cmp      CmpFunc[T]
 	task_cnt int
+	status   ComparatorStatus
 }
 
 type Connector[T any] struct {
@@ -61,10 +71,11 @@ type Connector[T any] struct {
 type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
 
 type PingMessage struct {
-	Type        MessageType
-	F           string // when the message is about leaderboard update
-	S           string // when the message is about leaderboard update
-	AssignieeId string // when the message is about leaderboard update
-	WireId      string // when the message is about status update
-	WireStatus  Status // when the message is about status update
+	Type         MessageType
+	F            string // when the message is about leaderboard update
+	S            string // when the message is about leaderboard update
+	AssignieeId  string // when the message is about leaderboard update
+	WireId       string // when the message is about status update
+	WireStatus   Status // when the message is about status update
+	ComparatorId string // when the message is about status update
 }

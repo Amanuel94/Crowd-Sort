@@ -15,33 +15,35 @@ import (
 )
 
 type Dispatcher[T any] struct {
-	s        *selector.Selector[T]
-	lb       [](any)
-	n        int
-	cpw      int //capacity per worker
-	workers  []*interfaces.Comparator[T]
-	pool     *pq[T]      // should contain already defined workers/processes
-	tcounter int         // number of assigned tasks
-	rank     map[any]int // maps id to rank
-	channel  chan *shared.Connector[T]
-	id2Item  map[any]*interfaces.Comparable[T]
-	Ping     chan shared.PingMessage
-	MSG      chan interface{}
+	s         *selector.Selector[T]
+	lb        [](any)
+	n         int
+	cpw       int //capacity per worker
+	workers   []*interfaces.Comparator[T]
+	pool      *pq[T]      // should contain already defined workers/processes
+	tcounter  int         // number of assigned tasks
+	rank      map[any]int // maps id to rank
+	channel   chan *shared.Connector[T]
+	id2Item   map[any]*interfaces.Comparable[T]
+	id2Worker map[any]*interfaces.Comparator[T]
+	Ping      chan shared.PingMessage
+	MSG       chan interface{}
 }
 
 func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 	d := &Dispatcher[T]{
-		s:        cfg.s,
-		lb:       cfg.lb,
-		cpw:      cfg.cpw,
-		pool:     cfg.pool,
-		workers:  cfg.workers,
-		tcounter: cfg.tcounter,
-		rank:     cfg.rank,
-		channel:  cfg.channel,
-		id2Item:  make(map[any]*interfaces.Comparable[T]),
-		Ping:     make(chan shared.PingMessage),
-		MSG:      make(chan interface{}),
+		s:         cfg.s,
+		lb:        cfg.lb,
+		cpw:       cfg.cpw,
+		pool:      cfg.pool,
+		workers:   cfg.workers,
+		tcounter:  cfg.tcounter,
+		rank:      cfg.rank,
+		channel:   cfg.channel,
+		id2Item:   make(map[any]*interfaces.Comparable[T]),
+		id2Worker: make(map[any]*interfaces.Comparator[T]),
+		Ping:      make(chan shared.PingMessage),
+		MSG:       make(chan interface{}),
 	}
 
 	items := []interfaces.Comparable[T]{}
@@ -53,6 +55,10 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		itemIndex := itemWire.GetIndex()
 		d.id2Item[itemIndex] = &itemComparable
 		d.rank[itemIndex] = idx
+	}
+
+	for _, worker := range d.workers {
+		d.id2Worker[(*worker).GetID()] = worker
 	}
 	d.s.CreateGraph(items)
 	d.n = d.s.NPairs()
@@ -78,14 +84,20 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
 
+	workeri := (*worker).(*shared.ComparatorModule[T])
+
 	statusMsg := shared.Assigned((*worker).GetID().(string))
+
 	pfi.SetStatus(statusMsg)
 	psi.SetStatus(statusMsg)
+	workeri.SetStatus(shared.ComparatorStatusBusy)
 
 	msgf := *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
 	d.Ping <- msgf
 	msgs := *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
 	d.Ping <- msgs
+	csmsg := *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
+	d.Ping <- csmsg
 
 	val, err := (*worker).CompareEntries(pf, ps)
 	argue(err == nil, "Error in comparing")
@@ -165,7 +177,7 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 
 		pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 		pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-
+		workeri := (*d.id2Worker[pair.AssignieeId]).(*shared.ComparatorModule[T])
 		if d.s.GetRemainingComparision(pair.F) == 0 {
 			pfi.SetStatus(shared.COMPLETED)
 		} else {
@@ -179,6 +191,9 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 			psi.SetStatus(shared.PENDING)
 		}
 		d.Ping <- *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
+
+		workeri.SetStatus(shared.ComparatorStatusIdle)
+		d.Ping <- *shared.NewComparatorStatusUpdate(workeri.GetID().(string))
 
 		res := (*pair).Order
 		argue(res != shared.NA, "Found Incomparable pairs")

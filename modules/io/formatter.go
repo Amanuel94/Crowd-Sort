@@ -52,12 +52,13 @@ func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 
 func formatWorkerRow[T any](worker interfaces.Comparator[T], p shared.PingMessage) string {
 	s := strings.TrimSpace(worker.GetID().(string))
+	workeri := worker.(*shared.ComparatorModule[T])
 	s = colourize.Colourize(s, colourize.White)
-	return fmt.Sprintf("%s\t%v\t", s, worker.TaskCount())
+	return fmt.Sprintf("%s\t%v\t\t%s\t", s, worker.TaskCount(), workeri.GetStatus())
 }
 
 func formatWorkerTitle(title []string) string {
-	return fmt.Sprintf("%s\t  \t%v\t", title[0], title[1])
+	return fmt.Sprintf("%s\t  \t%v\t \t%s", title[0], title[1], title[2])
 }
 
 func printProgressBar(current, total int) {
@@ -102,7 +103,7 @@ func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T]), p shar
 	titleWriter := tabwriter.NewWriter(os.Stdout, 0, 5, 10, ' ', tabwriter.AlignRight)
 	writer := tabwriter.NewWriter(os.Stdout, 10, 2, 10, ' ', tabwriter.AlignRight)
 
-	fmt.Fprintln(titleWriter, formatWorkerTitle([]string{"Comparator", "Task Count"}))
+	fmt.Fprintln(titleWriter, formatWorkerTitle([]string{"Comparator", "Task Count", "Status"}))
 	// fmt.Fprintln(writer, formatSeparator(2))
 
 	for _, row := range workers {

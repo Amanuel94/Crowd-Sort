@@ -92,11 +92,20 @@ func NewComparator[T any](cmp CmpFunc[T]) interfaces.Comparator[T] {
 		pid:      shortuuid.New(),
 		cmp:      cmp,
 		task_cnt: 0,
+		status:   ComparatorStatusIdle,
 	}
 }
 
 func NewConnector[T any](f string, s string) *Connector[T] {
 	return &Connector[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
+}
+
+func (c *ComparatorModule[T]) SetStatus(s ComparatorStatus) {
+	c.status = s
+}
+
+func (c *ComparatorModule[T]) GetStatus() ComparatorStatus {
+	return c.status
 }
 
 func (c *Connector[T]) GetKey() string {
@@ -116,5 +125,12 @@ func NewTaskStatusUpdate(wid string) *PingMessage {
 	return &PingMessage{
 		Type:   TaskStatusUpdate,
 		WireId: wid,
+	}
+}
+
+func NewComparatorStatusUpdate(id string) *PingMessage {
+	return &PingMessage{
+		Type:         ComparatorStatusUpdate,
+		ComparatorId: id,
 	}
 }
