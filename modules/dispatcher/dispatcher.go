@@ -140,13 +140,20 @@ func (d *Dispatcher[T]) Dispatch() {
 	defer deferPanic(&d.MSG)
 
 	wg := sync.WaitGroup{}
+	defer wg.Done()
 	wg.Add(d.n)
 	for d.tcounter < d.n {
 		d.pool.mu.Lock()
 		worker := d.pool.Pop()
 		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
+			workeri := (*worker).(*shared.ComparatorModule[T])
+			workeri.SetStatus(shared.ComparatorStatusDone)
+			d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
+
 			worker = d.pool.Pop()
 		}
+
+		argue(len(d.pool.pq) > 0, "No available workers")
 
 		bo := backoff.NewExponentialBackOff()
 		bo.InitialInterval = 2 * time.Second

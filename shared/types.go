@@ -31,10 +31,10 @@ const (
 )
 
 const (
-	ComparatorStatusIdle ComparatorStatus = "IDLE"
-	ComparatorStatusBusy ComparatorStatus = "BUSY"
-	ComparatorStatusDone ComparatorStatus = "DONE"
-	ComparatorStatusFail ComparatorStatus = "OVERFLOW"
+	ComparatorStatusIdle     ComparatorStatus = "IDLE"
+	ComparatorStatusBusy     ComparatorStatus = "BUSY"
+	ComparatorStatusDone     ComparatorStatus = "DONE"
+	ComparatorStatusOverflow ComparatorStatus = "OVERFLOW"
 )
 
 const (
