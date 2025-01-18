@@ -12,8 +12,8 @@ import (
 
 func main() {
 
-	n_items := 10
-	n_cmps := 4
+	n_items := 15
+	n_cmps := 7
 	items := generateItems(n_items)
 	comparators := generateComparators(n_cmps)
 	io_cfg := io.NewConfig(items, comparators)
@@ -47,7 +47,7 @@ func generateComparators(n int) iter.Seq[shared.CmpFunc[int]] {
 		index := i
 		comparators[index] = func(a *interfaces.Comparable[int], b *interfaces.Comparable[int]) (int, error) {
 
-			w := utils.RandInt(3, 5)
+			w := utils.RandInt(10, 15)
 			waitTime := time.Duration(w) * time.Second
 			time.Sleep(waitTime)
 			return (*a).Compare(*b), nil
