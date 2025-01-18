@@ -7,16 +7,11 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Wrapper for indexing items
-type Wire[T any] struct {
-	index string
-	value interfaces.Comparable[T]
-}
-
 func NewWire[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
 	return Wire[T]{
-		index: shortuuid.New(),
-		value: value,
+		index:  shortuuid.New(),
+		value:  value,
+		status: PENDING,
 	}
 }
 
@@ -36,11 +31,15 @@ func (item Wire[T]) SetValue(val T) {
 	item.value.SetValue(val)
 }
 
-// Wrapper for constrained types
-type OrderedType[T constraints.Ordered] struct {
-	index any
-	value T
+func (item Wire[T]) GetStatus() Status {
+	return item.status
 }
+
+func (item *Wire[T]) SetStatus(status Status) {
+	item.status = status
+}
+
+// Wrapper for constrained types
 
 func (o *OrderedType[T]) GetIndex() any {
 	return o.index
@@ -68,12 +67,6 @@ func NewInt[T constraints.Integer](value T) interfaces.Comparable[T] {
 		index: nil,
 		value: value,
 	}
-}
-
-type ComparatorModule[T any] struct {
-	pid      string
-	cmp      CmpFunc[T]
-	task_cnt int
 }
 
 func (ic ComparatorModule[T]) GetID() any {
@@ -108,4 +101,20 @@ func NewConnector[T any](f string, s string) *Connector[T] {
 
 func (c *Connector[T]) GetKey() string {
 	return c.Id
+}
+
+func NewLeaderboardUpdate(f string, s string, assigneeId string) *PingMessage {
+	return &PingMessage{
+		Type:        LeaderboardUpdate,
+		F:           f,
+		S:           s,
+		AssignieeId: assigneeId,
+	}
+}
+
+func NewTaskStatusUpdate(wid string) *PingMessage {
+	return &PingMessage{
+		Type:   TaskStatusUpdate,
+		WireId: wid,
+	}
 }

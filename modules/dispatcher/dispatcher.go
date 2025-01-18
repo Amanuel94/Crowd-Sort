@@ -23,7 +23,7 @@ type Dispatcher[T any] struct {
 	rank     map[any]int // maps id to rank
 	channel  chan *shared.Connector[T]
 	id2Item  map[any]*interfaces.Comparable[T]
-	Ping     chan shared.Connector[T]
+	Ping     chan shared.PingMessage
 	MSG      chan interface{}
 }
 
@@ -37,7 +37,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		rank:     cfg.rank,
 		channel:  cfg.channel,
 		id2Item:  make(map[any]*interfaces.Comparable[T]),
-		Ping:     make(chan shared.Connector[T]),
+		Ping:     make(chan shared.PingMessage),
 		MSG:      make(chan interface{}),
 	}
 	items := []interfaces.Comparable[T]{}
@@ -62,8 +62,18 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	defer wg.Done()
 	d.MSG <- "[INFO]: Tasks arrived. Assigning tasks."
 
-	pf := d.id2Item[pair.F]
-	ps := d.id2Item[pair.S]
+	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
+	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
+
+	statusMsg := shared.Assigned((*worker).GetID().(string))
+	pfi.SetStatus(statusMsg)
+	psi.SetStatus(statusMsg)
+
+	msgf := *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
+	d.Ping <- msgf
+	msgs := *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
+	d.Ping <- msgs
+
 	val, err := (*worker).CompareEntries(pf, ps)
 	argue(err == nil, "Error in comparing")
 	switch val {
@@ -140,9 +150,26 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 	defer deferPanic(&d.MSG)
 	for pair := range d.channel {
 		d.s.PrepareNeighbours(pair.Id)
+
+		pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
+		pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
+
+		if d.s.GetRemainingComparision(pair.F) == 0 {
+			pfi.SetStatus(shared.COMPLETED)
+		} else {
+			pfi.SetStatus(shared.PENDING)
+		}
+		d.Ping <- *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
+
+		if d.s.GetRemainingComparision(pair.S) == 0 {
+			psi.SetStatus(shared.COMPLETED)
+		} else {
+			psi.SetStatus(shared.PENDING)
+		}
+		d.Ping <- *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
+
 		res := (*pair).Order
 		argue(res != shared.NA, "Found Incomparable pairs")
-		pf, ps := d.id2Item[(*pair).F], d.id2Item[(*pair).S]
 		if res == shared.GT {
 			pfv := (*pf).GetValue()
 			psv := (*ps).GetValue()
@@ -150,7 +177,7 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 			(*ps).SetValue(pfv)
 		}
 		count += 1
-		d.Ping <- *pair
+		d.Ping <- *shared.NewLeaderboardUpdate((*pair).F, (*pair).S, (*pair).AssignieeId)
 	}
 
 	d.MSG <- fmt.Sprintf("[INFO] : %d tasks completed", count)

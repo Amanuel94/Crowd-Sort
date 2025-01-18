@@ -1,6 +1,11 @@
 package shared
 
-import "github.com/Amanuel94/crowdsort/interfaces"
+import (
+	"fmt"
+
+	"github.com/Amanuel94/crowdsort/interfaces"
+	"golang.org/x/exp/constraints"
+)
 
 // enum for score
 type Ord = int
@@ -12,6 +17,39 @@ const (
 	GT
 )
 
+type Status = string
+type MessageType = int
+
+func Assigned(assignee string) Status {
+	return Status(fmt.Sprintf("ASSIGNED TO: %s", assignee))
+}
+
+const (
+	PENDING   Status = "PENDING"
+	COMPLETED Status = "COMPLETED"
+)
+
+const (
+	TaskStatusUpdate MessageType = iota
+	LeaderboardUpdate
+)
+
+// Wrapper for indexing items
+type Wire[T any] struct {
+	index  string
+	value  interfaces.Comparable[T]
+	status Status
+}
+type OrderedType[T constraints.Ordered] struct {
+	index any
+	value T
+}
+type ComparatorModule[T any] struct {
+	pid      string
+	cmp      CmpFunc[T]
+	task_cnt int
+}
+
 type Connector[T any] struct {
 	Id          string
 	F           string
@@ -21,3 +59,12 @@ type Connector[T any] struct {
 }
 
 type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
+
+type PingMessage struct {
+	Type        MessageType
+	F           string // when the message is about leaderboard update
+	S           string // when the message is about leaderboard update
+	AssignieeId string // when the message is about leaderboard update
+	WireId      string // when the message is about status update
+	WireStatus  Status // when the message is about status update
+}

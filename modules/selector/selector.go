@@ -10,6 +10,7 @@ type Selector[T any] struct {
 	q       *queue[*shared.Connector[T]]
 	alg     string
 	batched bool
+	dep     map[string]int
 	MSG     chan interface{}
 }
 
@@ -21,6 +22,7 @@ func NewSelector[T any](cfg Config) *Selector[T] {
 		q:       NewQueue[*shared.Connector[T]](),
 		alg:     cfg.alg,
 		batched: false,
+		dep:     make(map[string]int),
 		MSG:     make(chan interface{}),
 	}
 }
@@ -45,6 +47,8 @@ func (s *Selector[T]) CreateGraph(u [](interfaces.Comparable[T])) {
 			continue
 		}
 		pair := shared.NewConnector[T](u[i].GetIndex().(string), u[j].GetIndex().(string))
+		s.dep[pair.F]++
+		s.dep[pair.S]++
 		s.g.addNode(&pair)
 
 		fprev, fok := pmap[pair.F]
@@ -79,9 +83,14 @@ func (s *Selector[T]) Next() (*shared.Connector[T], bool) {
 
 // Enqueue pairs with 0 dependencies
 func (s *Selector[T]) PrepareNeighbours(id string) {
-	node, ok := s.g.m[id]
 	defer deferPanic(&s.MSG)
+
+	node, ok := s.g.m[id]
 	argue(ok, "Node not found")
+
+	fi, si := (*node.value).F, (*node.value).S
+	s.dep[fi]--
+	s.dep[si]--
 
 	for _, neighbour := range node.neighbours {
 		neighbour.adj--
@@ -90,6 +99,10 @@ func (s *Selector[T]) PrepareNeighbours(id string) {
 		}
 	}
 
+}
+
+func (s *Selector[T]) GetRemainingComparision(id string) int {
+	return s.dep[id]
 }
 
 func (s *Selector[T]) firstBatch() {

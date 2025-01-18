@@ -12,7 +12,7 @@ import (
 
 // for printing the leaderboard as a table
 
-func printTable[T any](_ []string, data []shared.Wire[T], p shared.Connector[T]) {
+func printTable[T any](_ []string, data []shared.Wire[T], p shared.PingMessage) {
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.Debug)
 
@@ -30,14 +30,22 @@ func printTable[T any](_ []string, data []shared.Wire[T], p shared.Connector[T])
 // 	return fmt.Sprintf("%s\t%s\t", header[0], header[1])
 // }
 
-func formatRow[T any](item shared.Wire[T], p shared.Connector[T]) string {
+func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 	color := colourize.White
 	if item.GetIndex() == p.F || item.GetIndex() == p.S {
 		color = colourize.Green
 	}
 	s := colourize.Colourize(item.GetIndex(), color)
 	v := colourize.Colourize(item.GetValue(), color)
-	return fmt.Sprintf("\t%s\t%s\t", s, v)
+	statColor := colourize.White
+	if item.GetStatus() == shared.COMPLETED {
+		statColor = colourize.Green
+	} else if item.GetStatus() == shared.PENDING {
+		statColor = colourize.Yellow
+
+	}
+	stat := colourize.Colourize(item.GetStatus(), statColor)
+	return fmt.Sprintf("\t%s\t%s\t%s", s, v, stat)
 }
 
 func printProgressBar(current, total int) {
@@ -73,7 +81,7 @@ func clearTable() {
 	cmd.Run()
 }
 
-func printUpdate[T any](p shared.Connector[T]) {
+func printUpdate(p shared.PingMessage) {
 	msg := colourize.Colourize(fmt.Sprintf(" Comparator %s submitted a task.\n F: %s\n S: %s", p.AssignieeId, p.F, p.S), colourize.Green, colourize.Bold)
 	fmt.Println(msg)
 }

@@ -56,7 +56,9 @@ func (io *IO[T]) ShowLeaderboard() {
 		fmt.Printf("Live Leaderboard\n\n")
 		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
 		fmt.Println()
-		printUpdate(p)
+		if p.Type == shared.LeaderboardUpdate {
+			printUpdate(p)
+		}
 		fmt.Println()
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 		fmt.Println()
