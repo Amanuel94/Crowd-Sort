@@ -24,7 +24,7 @@ func New[T any](cfg *Config[T]) *IO[T] {
 		return shared.NewComparator[T](v).(*shared.ComparatorModule[T])
 	}, cfg.comparators)
 
-	dcfg := dispatcher.IntDispatcherConfig[T](items, comparators)
+	dcfg := dispatcher.IntDispatcherConfig(items, comparators)
 	newIO.d = dispatcher.New(dcfg)
 	newIO.msgBuffer = make([]interface{}, 0)
 	newIO.wg = utils.NewWaitGroup(2)
@@ -56,12 +56,17 @@ func (io *IO[T]) ShowLeaderboard() {
 		fmt.Printf("Live Leaderboard\n\n")
 		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
 		fmt.Println()
-		if p.Type == shared.LeaderboardUpdate {
-			printUpdate(p)
-		}
+		fmt.Println()
+		tble := io.d.GetComparatorsFromPool()
+		printWorkerStatusTable(tble, p)
+
+		fmt.Println()
 		fmt.Println()
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
 		fmt.Println()
+		if p.Type == shared.LeaderboardUpdate {
+			printUpdate(p)
+		}
 		// io.showCollectedMessages()
 		cnt++
 

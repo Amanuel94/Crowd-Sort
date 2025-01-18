@@ -31,6 +31,15 @@ func SliceToSeq[T any](slice []T) iter.Seq[T] {
 	}
 }
 
+// SeqToSlice converts a sequence to a slice.
+func SeqToSlice[T any](seq iter.Seq[T]) []T {
+	var slice []T
+	for v := range seq {
+		slice = append(slice, v)
+	}
+	return slice
+}
+
 // Concat concatenates multiple sequences into a single sequence.
 func Concat[T any](seqs ...iter.Seq[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {

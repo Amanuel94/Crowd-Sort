@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"text/tabwriter"
 
+	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/shared"
 	"github.com/TreyBastian/colourize"
 )
@@ -48,6 +50,16 @@ func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 	return fmt.Sprintf("\t%s\t%s\t%s", s, v, stat)
 }
 
+func formatWorkerRow[T any](worker interfaces.Comparator[T], p shared.PingMessage) string {
+	s := strings.TrimSpace(worker.GetID().(string))
+	s = colourize.Colourize(s, colourize.White)
+	return fmt.Sprintf("%s\t%v\t", s, worker.TaskCount())
+}
+
+func formatWorkerTitle(title []string) string {
+	return fmt.Sprintf("%s\t  \t%v\t", title[0], title[1])
+}
+
 func printProgressBar(current, total int) {
 	width := 50
 	progress := float64(current) / float64(total)
@@ -70,7 +82,7 @@ func repeat(char rune, count int) string {
 // func formatSeparator(columns int) string {
 // 	separator := ""
 // 	for i := 0; i < columns; i++ {
-// 		separator += "--------\t"
+// 		separator += "----------\t"
 // 	}
 // 	return separator
 // }
@@ -84,4 +96,19 @@ func clearTable() {
 func printUpdate(p shared.PingMessage) {
 	msg := colourize.Colourize(fmt.Sprintf(" Comparator %s submitted a task.\n F: %s\n S: %s", p.AssignieeId, p.F, p.S), colourize.Green, colourize.Bold)
 	fmt.Println(msg)
+}
+
+func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T]), p shared.PingMessage) {
+	titleWriter := tabwriter.NewWriter(os.Stdout, 0, 5, 10, ' ', tabwriter.AlignRight)
+	writer := tabwriter.NewWriter(os.Stdout, 10, 2, 10, ' ', tabwriter.AlignRight)
+
+	fmt.Fprintln(titleWriter, formatWorkerTitle([]string{"Comparator", "Task Count"}))
+	// fmt.Fprintln(writer, formatSeparator(2))
+
+	for _, row := range workers {
+		fmt.Fprintln(writer, formatWorkerRow(*row, p))
+	}
+	titleWriter.Flush()
+	writer.Flush()
+
 }

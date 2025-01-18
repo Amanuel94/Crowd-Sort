@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -17,7 +18,8 @@ type Dispatcher[T any] struct {
 	s        *selector.Selector[T]
 	lb       [](any)
 	n        int
-	cpw      int         //capacity per worker
+	cpw      int //capacity per worker
+	workers  []*interfaces.Comparator[T]
 	pool     *pq[T]      // should contain already defined workers/processes
 	tcounter int         // number of assigned tasks
 	rank     map[any]int // maps id to rank
@@ -33,6 +35,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		lb:       cfg.lb,
 		cpw:      cfg.cpw,
 		pool:     cfg.pool,
+		workers:  cfg.workers,
 		tcounter: cfg.tcounter,
 		rank:     cfg.rank,
 		channel:  cfg.channel,
@@ -40,6 +43,7 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		Ping:     make(chan shared.PingMessage),
 		MSG:      make(chan interface{}),
 	}
+
 	items := []interfaces.Comparable[T]{}
 	for i, item := range d.lb {
 		idx := i
@@ -50,17 +54,26 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		d.id2Item[itemIndex] = &itemComparable
 		d.rank[itemIndex] = idx
 	}
-
 	d.s.CreateGraph(items)
 	d.n = d.s.NPairs()
 
 	return d
 }
 
+func (d *Dispatcher[T]) GetComparatorsFromPool() []*interfaces.Comparator[T] {
+
+	comparators := append([]*interfaces.Comparator[T]{}, d.workers...)
+
+	sort.Slice(comparators, func(i, j int) bool {
+		return (*comparators[i]).TaskCount() > (*comparators[j]).TaskCount()
+	})
+	return comparators
+
+}
+
 func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator[T], pair *shared.Connector[T]) {
 	defer deferPanic(&d.MSG)
 	defer wg.Done()
-	d.MSG <- "[INFO]: Tasks arrived. Assigning tasks."
 
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
@@ -111,15 +124,13 @@ func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool
 }
 
 func (d *Dispatcher[T]) Dispatch() {
-
 	go d.collectSelectorMessages()
 	defer deferPanic(&d.MSG)
 
 	wg := sync.WaitGroup{}
 	wg.Add(d.n)
-
 	for d.tcounter < d.n {
-
+		d.pool.mu.Lock()
 		worker := d.pool.Pop()
 		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
 			worker = d.pool.Pop()
@@ -136,6 +147,7 @@ func (d *Dispatcher[T]) Dispatch() {
 		pair.AssignieeId = (*worker).GetID().(string)
 		(*worker).Assigned()
 		d.pool.Push(*worker)
+		d.pool.mu.Unlock()
 		d.tcounter++
 
 	}

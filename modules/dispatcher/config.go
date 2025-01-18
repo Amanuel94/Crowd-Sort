@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"iter"
 
+	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/shared"
 
 	"github.com/Amanuel94/crowdsort/modules/selector"
@@ -12,7 +13,8 @@ type DispatcherConfig[T any] struct {
 	s        *selector.Selector[T]
 	lb       [](any)
 	n        int
-	cpw      int         //capacity per worker
+	cpw      int //capacity per worker
+	workers  []*interfaces.Comparator[T]
 	pool     *pq[T]      // should contain already defined workers/processes
 	tcounter int         // number of assigned tasks
 	rank     map[any]int // maps id to rank
@@ -38,6 +40,7 @@ func IntDispatcherConfig[T any](items iter.Seq[*shared.Wire[T]], processes iter.
 		n:        len(lb),
 		cpw:      len(lb),
 		pool:     pq,
+		workers:  append([]*(interfaces.Comparator[T]){}, pq.pq...),
 		tcounter: 0,
 		rank:     rank,
 		channel:  make(chan *shared.Connector[T]),

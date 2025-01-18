@@ -3,6 +3,7 @@ package dispatcher
 
 import (
 	"iter"
+	"sync"
 
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/shared"
@@ -10,11 +11,13 @@ import (
 
 type pq[T any] struct {
 	pq []*(interfaces.Comparator[T])
+	mu *sync.Mutex
 }
 
 func NewPQ[T any]() *pq[T] {
 	return &pq[T]{
 		pq: make([]*(interfaces.Comparator[T]), 0),
+		mu: &sync.Mutex{},
 	}
 }
 

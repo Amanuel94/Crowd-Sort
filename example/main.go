@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"iter"
 	"time"
 
@@ -16,11 +15,6 @@ func main() {
 	n_items := 10
 	n_cmps := 4
 	items := generateItems(n_items)
-	for item := range items {
-		fmt.Print((*item).GetValue())
-		fmt.Print("\t")
-	}
-	fmt.Println()
 	comparators := generateComparators(n_cmps)
 	io_cfg := io.NewConfig(items, comparators)
 	io := io.New(io_cfg)
@@ -59,7 +53,6 @@ func generateComparators(n int) iter.Seq[shared.CmpFunc[int]] {
 			return (*a).Compare(*b), nil
 		}
 	}
-
 	return utils.SliceToSeq(comparators)
 
 }
