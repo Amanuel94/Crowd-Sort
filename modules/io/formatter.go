@@ -16,21 +16,20 @@ import (
 
 func printTable[T any](_ []string, data []shared.Wire[T], p shared.PingMessage) {
 
+	defaultWriter := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.AlignRight)
+	fmt.Fprintln(defaultWriter, "\n\tLive Leaderboard")
+	fmt.Fprintln(defaultWriter, "\t----------------")
+
 	writer := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.Debug)
-
-	// fmt.Fprintln(writer, formatHeader(header))
-	// fmt.Fprintln(writer, formatSeparator(len(header)))
-
 	for _, row := range data {
 		fmt.Fprintln(writer, formatRow(row, p))
 	}
 
-	writer.Flush()
-}
+	defaultWriter.Flush()
 
-// func formatHeader(header []string) string {
-// 	return fmt.Sprintf("%s\t%s\t", header[0], header[1])
-// }
+	writer.Flush()
+	newLine(2)
+}
 
 func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 	color := colourize.White
@@ -50,7 +49,7 @@ func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 	return fmt.Sprintf("\t%s\t%s\t%s", s, v, stat)
 }
 
-func formatWorkerRow[T any](worker interfaces.Comparator[T], p shared.PingMessage) string {
+func formatWorkerRow[T any](worker interfaces.Comparator[T]) string {
 	s := strings.TrimSpace(worker.GetID().(string))
 	workeri := worker.(*shared.ComparatorModule[T])
 	s = colourize.Colourize(s, colourize.White)
@@ -70,6 +69,7 @@ func printProgressBar(current, total int) {
 	percentage := int(progress * 100)
 
 	fmt.Printf("\r%s %3d%%", bar, percentage)
+	newLine(1)
 }
 
 func repeat(char rune, count int) string {
@@ -79,15 +79,6 @@ func repeat(char rune, count int) string {
 	}
 	return result
 }
-
-// func formatSeparator(columns int) string {
-// 	separator := ""
-// 	for i := 0; i < columns; i++ {
-// 		separator += "----------\t"
-// 	}
-// 	return separator
-// }
-
 func clearTable() {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
@@ -99,17 +90,19 @@ func printUpdate(p shared.PingMessage) {
 	fmt.Println(msg)
 }
 
-func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T]), p shared.PingMessage) {
+func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T])) {
 	titleWriter := tabwriter.NewWriter(os.Stdout, 0, 5, 10, ' ', tabwriter.AlignRight)
 	writer := tabwriter.NewWriter(os.Stdout, 10, 2, 10, ' ', tabwriter.AlignRight)
 
+	// TODO: make this dynamic
 	fmt.Fprintln(titleWriter, formatWorkerTitle([]string{"Comparator", "Task Count", "Status"}))
-	// fmt.Fprintln(writer, formatSeparator(2))
+	fmt.Fprintln(titleWriter, formatWorkerTitle([]string{"---------", "----------", "------"}))
 
 	for _, row := range workers {
-		fmt.Fprintln(writer, formatWorkerRow(*row, p))
+		fmt.Fprintln(writer, formatWorkerRow(*row))
 	}
 	titleWriter.Flush()
 	writer.Flush()
+	newLine(2)
 
 }

@@ -38,49 +38,49 @@ func New[T any](cfg *Config[T]) *IO[T] {
 
 func (io *IO[T]) collectDispatcherMessages() {
 	for msg := range io.d.MSG {
-		fmt.Println(msg)
+		if io.verbose > 0 {
+			fmt.Println(msg)
+		}
 		io.msgBuffer = append(io.msgBuffer, msg)
 	}
 }
 
 func (io *IO[T]) StartDispatcher() {
 	go io.collectDispatcherMessages()
-	fmt.Println("INFO: Starting Dispatcher")
+	if io.verbose > 0 {
+		fmt.Println("INFO: Starting Dispatcher")
+	}
 	io.d.Dispatch()
 	io.wg.Done()
 }
 
+// TODO: Make this function more readable
 func (io *IO[T]) ShowLeaderboard() {
 	cnt := 0
 	go io.d.UpdateLeaderboard()
+
 	for p := range io.d.Ping {
 		clearTable()
-		fmt.Printf("Live Leaderboard\n\n")
-		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
-		fmt.Println()
-		fmt.Println()
-		tble := io.d.GetComparatorsFromPool()
-		printWorkerStatusTable(tble, p)
 
-		fmt.Println()
-		fmt.Println()
+		printTable([]string{"Wire", "Value"}, io.d.GetLeaderboard(), p)
+		printWorkerStatusTable(io.d.GetComparatorsFromPool())
 		printProgressBar(io.d.GetTaskCount(), io.d.GetTotalTasks())
-		fmt.Println()
+
 		if p.Type == shared.LeaderboardUpdate {
 			printUpdate(p)
 		}
 		if io.verbose > 1 {
-			io.showCollectedMessages()
+			io.printCollectedMessages()
 		}
 		cnt++
 
 	}
-	fmt.Println("INFO: Final Leaderboard ", cnt)
+	fmt.Println("[INFO]: Final Leaderboard. Number of std Updates:", cnt)
 	io.wg.Done()
 
 }
 
-func (io *IO[T]) showCollectedMessages() {
+func (io *IO[T]) printCollectedMessages() {
 	for _, msg := range io.msgBuffer {
 		fmt.Println(msg)
 	}
@@ -95,5 +95,12 @@ func RegisterMessage(msg string, verbose int, msgBuffer *[]interface{}) {
 	if verbose > 0 {
 		fmt.Println(msg)
 		*msgBuffer = append(*msgBuffer, msg)
+	}
+}
+
+func newLine(n int) {
+	for n > 0 {
+		fmt.Println()
+		n--
 	}
 }
