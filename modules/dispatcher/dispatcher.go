@@ -246,10 +246,6 @@ func (d *Dispatcher[T]) Dispatch() {
 
 }
 
-func asModule[T any](s *interfaces.Comparator[T]) *shared.ComparatorModule[T] {
-	return (*s).(*shared.ComparatorModule[T])
-}
-
 func (d *Dispatcher[T]) UpdateLeaderboard() {
 	count := 0
 	defer deferPanic(&d.MSG)
@@ -260,6 +256,16 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 
 		pf := d.id2Item[pair.F]
 		ps := d.id2Item[pair.S]
+
+		if (d.s.GetRemainingComparision(pair.F)) == 0 {
+			asWire(pf).SetStatus(shared.COMPLETED)
+			d.Ping <- *shared.NewTaskStatusUpdate(pair.F)
+		}
+
+		if (d.s.GetRemainingComparision(pair.S)) == 0 {
+			asWire(ps).SetStatus(shared.COMPLETED)
+			d.Ping <- *shared.NewTaskStatusUpdate(pair.S)
+		}
 
 		res := pair.Order
 		argue(res != shared.NA, "Found Incomparable pairs")
@@ -294,4 +300,12 @@ func (d *Dispatcher[T]) GetTaskCount() int {
 
 func (d *Dispatcher[T]) GetTotalTasks() int {
 	return d.n
+}
+
+func asModule[T any](s *interfaces.Comparator[T]) *shared.ComparatorModule[T] {
+	return (*s).(*shared.ComparatorModule[T])
+}
+
+func asWire[T any](s *interfaces.Comparable[T]) *shared.Wire[T] {
+	return (*s).(*shared.Wire[T])
 }

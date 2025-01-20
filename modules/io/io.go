@@ -25,7 +25,7 @@ func New[T any](cfg *Config[T]) *IO[T] {
 
 	newIO := &IO[T]{}
 
-	dcfg := dispatcher.NewDispatcherConfig(items, comparators)
+	dcfg := dispatcher.NewDispatcherConfig(items, comparators).WithTaskLimit(cfg.cpw)
 	newIO.d = dispatcher.New(dcfg)
 	newIO.msgBuffer = msgBuffer
 	newIO.wg = utils.NewWaitGroup(2)
@@ -40,17 +40,15 @@ func New[T any](cfg *Config[T]) *IO[T] {
 func (io *IO[T]) collectDispatcherMessages() {
 	for msg := range io.d.MSG {
 		if io.verbose > 0 {
-			fmt.Println(msg)
+			RegisterMessage(msg.(string), io.verbose, &io.msgBuffer)
 		}
-		io.msgBuffer = append(io.msgBuffer, msg)
 	}
 }
 
 func (io *IO[T]) StartDispatcher() {
 	go io.collectDispatcherMessages()
 	if io.verbose > 0 {
-		fmt.Print("   ")
-		fmt.Println("[INFO]: Starting Dispatcher")
+		RegisterMessage("[INFO]: Starting Dispatcher", io.verbose, &io.msgBuffer)
 	}
 	io.d.Dispatch()
 	io.wg.Done()
@@ -80,7 +78,7 @@ func (io *IO[T]) ShowLeaderboard() {
 		cnt++
 
 	}
-	RegisterMessage("   [INFO]: Final Result", io.verbose, &io.msgBuffer)
+	RegisterMessage("INFO]: Final Result", io.verbose, &io.msgBuffer)
 	io.wg.Done()
 
 }
@@ -88,8 +86,7 @@ func (io *IO[T]) ShowLeaderboard() {
 func (io *IO[T]) printCollectedMessages() {
 	start := max(len(io.msgBuffer)-io.bufferSize, 0)
 	for _, msg := range io.msgBuffer[start:] {
-		fmt.Print("   ")
-		fmt.Println(msg)
+		RegisterMessage(msg.(string), io.verbose, &io.msgBuffer)
 	}
 }
 

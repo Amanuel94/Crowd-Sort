@@ -13,6 +13,7 @@ type Config[T any] struct {
 	comparators iter.Seq[shared.CmpFunc[T]]
 	verbose     int
 	bufferSize  int
+	cpw         int
 }
 
 func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators iter.Seq[shared.CmpFunc[T]], verbose int) *Config[T] {
@@ -22,10 +23,16 @@ func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators ite
 		comparators: comparators,
 		verbose:     verbose,
 		bufferSize:  15,
+		cpw:         1000,
 	}
 }
 
 func (cfg *Config[T]) WithBufferSize(bufferSize int) *Config[T] {
 	cfg.bufferSize = bufferSize
+	return cfg
+}
+
+func (cfg *Config[T]) WithTaskLimit(cpw int) *Config[T] {
+	cfg.cpw = cpw
 	return cfg
 }

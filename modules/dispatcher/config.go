@@ -48,7 +48,7 @@ func NewDispatcherConfig[T any](items iter.Seq[*shared.Wire[T]], comparators ite
 
 }
 
-func WithTaskLimit[T any](cfg *DispatcherConfig[T], limit int) *DispatcherConfig[T] {
+func (cfg *DispatcherConfig[T]) WithTaskLimit(limit int) *DispatcherConfig[T] {
 	cfg.cpw = limit
 	return cfg
 }
