@@ -12,11 +12,11 @@ import (
 
 func main() {
 
-	n_items := 4
-	n_cmps := 2
+	n_items := 10
+	n_cmps := 3
 	items := generateItems(n_items)
 	comparators := generateComparators(n_cmps)
-	io_cfg := io.NewConfig(items, comparators, 2)
+	io_cfg := io.NewConfig(items, comparators, 2).WithBufferSize(10)
 	io := io.New(io_cfg)
 	go io.StartDispatcher()
 	go io.ShowLeaderboard()
@@ -47,7 +47,7 @@ func generateComparators(n int) iter.Seq[shared.CmpFunc[int]] {
 		index := i
 		comparators[index] = func(a *interfaces.Comparable[int], b *interfaces.Comparable[int]) (int, error) {
 
-			w := utils.RandInt(10, 15)
+			w := utils.RandInt(4, 7)
 			waitTime := time.Duration(w) * time.Second
 			time.Sleep(waitTime)
 			return (*a).Compare(*b), nil

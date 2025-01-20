@@ -25,7 +25,7 @@ func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators ite
 	}
 }
 
-func WithBufferSize[T any](cfg *Config[T], bufferSize int) *Config[T] {
+func (cfg *Config[T]) WithBufferSize(bufferSize int) *Config[T] {
 	cfg.bufferSize = bufferSize
 	return cfg
 }

@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -88,7 +89,9 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-	workeri := (*worker).(*shared.ComparatorModule[T])
+	workeri := asModule(worker)
+
+	d.MSG <- fmt.Sprintf("[INFO]: Assigning task to %s", (*worker).GetID())
 
 	// Set statuses
 	statusMsg := shared.Assigned((*worker).GetID().(string))
@@ -102,7 +105,11 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
 
 	// Perform comparison
+
+	start := time.Now()
 	val, err := (*worker).CompareEntries(pf, ps)
+	elapsed := time.Since(start)
+
 	if err != nil {
 		d.MSG <- fmt.Sprintf("[ERROR]: Error in comparing: %v", err)
 		return
@@ -118,7 +125,7 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 		pair.Order = shared.EQ
 	}
 
-	d.MSG <- fmt.Sprintf("[INFO]: Comparator %s submitted.", (*worker).GetID())
+	d.MSG <- fmt.Sprintf("[INFO]: Comparator %s submitted. Time Elapsed: %v ms", (*worker).GetID(), elapsed.Milliseconds())
 
 	updateStatus := func(wire *shared.Wire[T]) {
 		if d.s.GetRemainingComparision((*wire).GetIndex().(string)) == 0 {
@@ -157,6 +164,46 @@ func (d *Dispatcher[T]) getReadyResult(attr func() (*shared.Connector[T], bool),
 	}
 }
 
+func (d *Dispatcher[T]) getWorker() (*interfaces.Comparator[T], error) {
+	var idleWorker *interfaces.Comparator[T]
+	var nonIdleWorkers []*interfaces.Comparator[T]
+
+	for len(d.pool.pq) > 0 {
+		worker := d.pool.Pop()
+		workeri := asModule(worker)
+		if workeri.GetStatus() == shared.ComparatorStatusIdle {
+			idleWorker = worker
+			break
+		}
+		nonIdleWorkers = append(nonIdleWorkers, worker)
+	}
+
+	for _, worker := range nonIdleWorkers {
+		workeri := asModule(worker)
+		if workeri.GetStatus() == shared.ComparatorStatusBusy {
+			d.pool.Push(workeri)
+		}
+	}
+
+	if len(d.pool.pq) == 0 && idleWorker == nil {
+		return nil, backoff.Permanent(errors.New("no workers available"))
+	}
+
+	if idleWorker != nil {
+		return idleWorker, nil
+	}
+
+	d.MSG <- "[INFO]: All workers are busy. Awaiting for a worker to be available..."
+	return nil, backoffError(false, "all workers are occupied")
+}
+
+func getBackoffRetryOptionWithInitialInterval(interval time.Duration) backoff.RetryOption {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = interval
+	opts := backoff.WithBackOff(bo)
+	return opts
+}
+
 func (d *Dispatcher[T]) Dispatch() {
 	go d.collectSelectorMessages()
 	defer deferPanic(&d.MSG)
@@ -165,29 +212,18 @@ func (d *Dispatcher[T]) Dispatch() {
 
 	d.pool.mu.Lock()
 	for d.tcounter < d.n {
-		worker := d.pool.Pop()
 
-		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
-			workeri := (*worker).(*shared.ComparatorModule[T])
-			workeri.SetStatus(shared.ComparatorStatusDone)
-			d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
-			worker = d.pool.Pop()
+		// TODO: Assumes every worker completes its tasks. Handle non-happy path
+		opts := getBackoffRetryOptionWithInitialInterval(3 * time.Second)
+		worker, err := backoff.Retry(context.TODO(), d.getWorker, opts)
+		if err != nil {
+			d.MSG <- fmt.Sprintf("[ERROR]: %v", err)
+			panic(err)
 		}
 
-		if len(d.pool.pq) == 0 {
-
-			for _, worker := range d.workers {
-				workeri := (*worker).(*shared.ComparatorModule[T])
-				workeri.SetStatus(shared.ComparatorStatusOverflow)
-				d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
-			}
-
-		}
 		argue(len(d.pool.pq) > 0, "All workers are overloaded.")
 
-		bo := backoff.NewExponentialBackOff()
-		bo.InitialInterval = 3 * time.Second
-		opts := backoff.WithBackOff(bo)
+		opts = getBackoffRetryOptionWithInitialInterval(3 * time.Second)
 		pair, err := backoff.Retry(context.TODO(), d.getReadyResult(d.s.Next, worker), opts)
 		if err != nil {
 			panic(err)
@@ -196,6 +232,10 @@ func (d *Dispatcher[T]) Dispatch() {
 		go d.assign(wg, worker, pair)
 		pair.AssignieeId = (*worker).GetID().(string)
 		(*worker).Assigned()
+		if (*worker).TaskCount() < d.cpw {
+			asModule(worker).SetStatus(shared.ComparatorStatusBusy)
+			d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
+		}
 		d.pool.Push(*worker)
 		d.tcounter++
 	}
@@ -204,6 +244,10 @@ func (d *Dispatcher[T]) Dispatch() {
 	wg.Wait()
 	d.MSG <- fmt.Sprintf("[INFO]: Finished dispatching %d tasks", d.tcounter)
 
+}
+
+func asModule[T any](s *interfaces.Comparator[T]) *shared.ComparatorModule[T] {
+	return (*s).(*shared.ComparatorModule[T])
 }
 
 func (d *Dispatcher[T]) UpdateLeaderboard() {

@@ -49,7 +49,8 @@ func (io *IO[T]) collectDispatcherMessages() {
 func (io *IO[T]) StartDispatcher() {
 	go io.collectDispatcherMessages()
 	if io.verbose > 0 {
-		fmt.Println("INFO: Starting Dispatcher")
+		fmt.Print("   ")
+		fmt.Println("[INFO]: Starting Dispatcher")
 	}
 	io.d.Dispatch()
 	io.wg.Done()
@@ -79,7 +80,7 @@ func (io *IO[T]) ShowLeaderboard() {
 		cnt++
 
 	}
-	RegisterMessage("[INFO]: Final Result", io.verbose, &io.msgBuffer)
+	RegisterMessage("   [INFO]: Final Result", io.verbose, &io.msgBuffer)
 	io.wg.Done()
 
 }
@@ -87,6 +88,7 @@ func (io *IO[T]) ShowLeaderboard() {
 func (io *IO[T]) printCollectedMessages() {
 	start := max(len(io.msgBuffer)-io.bufferSize, 0)
 	for _, msg := range io.msgBuffer[start:] {
+		fmt.Print("   ")
 		fmt.Println(msg)
 	}
 }
@@ -98,6 +100,7 @@ func (io *IO[T]) Wait() {
 
 func RegisterMessage(msg string, verbose int, msgBuffer *[]interface{}) {
 	if verbose > 0 {
+		fmt.Print("   ")
 		fmt.Println(msg)
 		*msgBuffer = append(*msgBuffer, msg)
 	}

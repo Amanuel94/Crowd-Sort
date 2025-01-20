@@ -63,7 +63,7 @@ func printProgressBar(current, total int) {
 	progress := float64(current) / float64(total)
 	barWidth := int(progress * float64(width))
 
-	bar := colourize.Colourize("["+string(repeat('#', barWidth))+string(repeat(' ', width-barWidth))+"]", colourize.Blue)
+	bar := colourize.Colourize("   ["+string(repeat('#', barWidth))+string(repeat(' ', width-barWidth))+"]", colourize.Blue)
 	percentage := int(progress * 100)
 
 	fmt.Printf("\r%s %3d%%", bar, percentage)
@@ -85,7 +85,7 @@ func clearTable() {
 }
 
 func printUpdate(p shared.PingMessage) {
-	msg := colourize.Colourize(fmt.Sprintf(" Comparator %s submitted a task.\n F: %s\n S: %s", p.AssignieeId, p.F, p.S), colourize.Green, colourize.Bold)
+	msg := colourize.Colourize(fmt.Sprintf("   Comparator %s submitted a task.\n    F: %s\n    S: %s", p.AssignieeId, p.F, p.S), colourize.Green, colourize.Bold)
 	fmt.Println(msg)
 	newLine(1)
 }
