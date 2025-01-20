@@ -88,6 +88,7 @@ func clearTable() {
 func printUpdate(p shared.PingMessage) {
 	msg := colourize.Colourize(fmt.Sprintf(" Comparator %s submitted a task.\n F: %s\n S: %s", p.AssignieeId, p.F, p.S), colourize.Green, colourize.Bold)
 	fmt.Println(msg)
+	newLine(1)
 }
 
 func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T])) {

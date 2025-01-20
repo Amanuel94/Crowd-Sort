@@ -30,6 +30,7 @@ func New[T any](cfg *Config[T]) *IO[T] {
 	newIO.msgBuffer = msgBuffer
 	newIO.wg = utils.NewWaitGroup(2)
 	newIO.verbose = cfg.verbose
+	newIO.bufferSize = cfg.bufferSize
 
 	RegisterMessage("[INFO]: IO Initialized", newIO.verbose, &newIO.msgBuffer)
 
@@ -68,7 +69,10 @@ func (io *IO[T]) ShowLeaderboard() {
 
 		if p.Type == shared.LeaderboardUpdate {
 			printUpdate(p)
+		} else {
+			newLine(4)
 		}
+
 		if io.verbose > 1 {
 			io.printCollectedMessages()
 		}
@@ -81,7 +85,8 @@ func (io *IO[T]) ShowLeaderboard() {
 }
 
 func (io *IO[T]) printCollectedMessages() {
-	for _, msg := range io.msgBuffer {
+	start := max(len(io.msgBuffer)-io.bufferSize, 0)
+	for _, msg := range io.msgBuffer[start:] {
 		fmt.Println(msg)
 	}
 }

@@ -7,8 +7,9 @@ import (
 )
 
 type IO[T any] struct {
-	d         *dispatcher.Dispatcher[T]
-	wg        *sync.WaitGroup
-	verbose   int
-	msgBuffer []interface{}
+	d          *dispatcher.Dispatcher[T]
+	wg         *sync.WaitGroup
+	verbose    int
+	msgBuffer  []interface{}
+	bufferSize int
 }
