@@ -12,8 +12,6 @@ import (
 	"github.com/TreyBastian/colourize"
 )
 
-// for printing the leaderboard as a table
-
 func printTable[T any](_ []string, data []shared.Wire[T], p shared.PingMessage) {
 
 	defaultWriter := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.AlignRight)
@@ -79,6 +77,7 @@ func repeat(char rune, count int) string {
 	}
 	return result
 }
+
 func clearTable() {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout

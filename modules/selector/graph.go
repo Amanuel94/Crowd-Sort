@@ -37,7 +37,7 @@ func (g *graph[T]) addEdge(src_id string, dest_id string, msg *chan interface{})
 	nsrc, oku := g.m[src_id]
 	ndest, okv := g.m[dest_id]
 
-	deferPanic(msg)
+	defer deferPanic(msg)
 	argue(oku && okv, "Nodes not found")
 	for _, neighbour := range nsrc.neighbours {
 		if (*neighbour.value).GetKey() == dest_id {

@@ -5,10 +5,10 @@ import (
 )
 
 // pair generator for batcher even-odd-merge sort (BEMS)
-// TODO: Change to iterative version
+// TODO: Change to iterative
 func BEMS_pairs_generator(n int, d int, o int, msg *chan interface{}) [][]int {
 
-	deferPanic(msg)
+	defer deferPanic(msg)
 	argue(n >= 2, "n must be greater than 1")
 	if utils.Bit_count(n) > 1 {
 		n = utils.NextPower(n)

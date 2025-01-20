@@ -14,6 +14,7 @@ func argue(v bool, msg string) {
 	}
 }
 
+// TODO: Make this better
 func deferPanic(msg *chan interface{}) {
 	if r := recover(); r != nil {
 		error_msg := fmt.Sprintf(colourize.Colourize("[ERROR]: %v", colourize.Red), r)
