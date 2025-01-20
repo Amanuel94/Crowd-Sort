@@ -3,11 +3,10 @@
 package utils
 
 import (
+	"fmt"
 	"iter"
+	"math/rand"
 	"sync"
-
-	"github.com/lithammer/shortuuid"
-	"golang.org/x/exp/rand"
 )
 
 // Map applies a function to each element of a sequence and returns a new sequence with the results.
@@ -93,5 +92,7 @@ func NewWaitGroup(n int) *sync.WaitGroup {
 
 // new ID
 func NewIdentifier() string {
-	return shortuuid.New()
+	id := rand.Intn(1000000)
+	return fmt.Sprintf("%06d", id)
+	// return shortuuid.New() // for unique ids
 }
