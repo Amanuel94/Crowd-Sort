@@ -10,6 +10,7 @@ import (
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/modules/selector"
 	"github.com/Amanuel94/crowdsort/shared"
+	"github.com/Amanuel94/crowdsort/utils"
 
 	"github.com/cenkalti/backoff/v5"
 )
@@ -46,21 +47,25 @@ func New[T any](cfg *DispatcherConfig[T]) *Dispatcher[T] {
 		MSG:       make(chan interface{}),
 	}
 
-	items := []interfaces.Comparable[T]{}
 	for i, item := range d.lb {
-		idx := i
 		itemComparable := item.(interfaces.Comparable[T])
-		items = append(items, itemComparable)
 		itemWire := item.(*shared.Wire[T])
 		itemIndex := itemWire.GetIndex()
+
 		d.id2Item[itemIndex] = &itemComparable
-		d.rank[itemIndex] = idx
+		d.rank[itemIndex] = i
 	}
 
 	for _, worker := range d.workers {
 		d.id2Worker[(*worker).GetID()] = worker
 	}
-	d.s.CreateGraph(items)
+
+	comparables := make([]interfaces.Comparable[T], len(d.lb))
+	for i, item := range d.lb {
+		comparables[i] = item.(interfaces.Comparable[T])
+	}
+
+	d.s.CreateGraph(comparables)
 	d.n = d.s.NPairs()
 
 	return d
@@ -83,35 +88,54 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-
 	workeri := (*worker).(*shared.ComparatorModule[T])
 
+	// Set statuses
 	statusMsg := shared.Assigned((*worker).GetID().(string))
-
 	pfi.SetStatus(statusMsg)
 	psi.SetStatus(statusMsg)
 	workeri.SetStatus(shared.ComparatorStatusBusy)
 
-	msgf := *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
-	d.Ping <- msgf
-	msgs := *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
-	d.Ping <- msgs
-	csmsg := *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
-	d.Ping <- csmsg
+	// Send status updates
+	d.Ping <- *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
+	d.Ping <- *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
+	d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
 
+	// Perform comparison
 	val, err := (*worker).CompareEntries(pf, ps)
-	argue(err == nil, "Error in comparing")
+	if err != nil {
+		d.MSG <- fmt.Sprintf("[ERROR]: Error in comparing: %v", err)
+		return
+	}
+
+	// Set order based on comparison result
 	switch val {
-	case 1: // F > S
+	case 1:
 		pair.Order = shared.GT
-	case -1: // F < S
+	case -1:
 		pair.Order = shared.LT
-	case 0: // F == S
+	case 0:
 		pair.Order = shared.EQ
 	}
 
 	d.MSG <- fmt.Sprintf("[INFO]: Comparator %s submitted.", (*worker).GetID())
 
+	updateStatus := func(wire *shared.Wire[T]) {
+		if d.s.GetRemainingComparision((*wire).GetIndex().(string)) == 0 {
+			wire.SetStatus(shared.COMPLETED)
+		} else {
+			wire.SetStatus(shared.PENDING)
+		}
+		d.Ping <- *shared.NewTaskStatusUpdate(wire.GetIndex().(string))
+	}
+
+	updateStatus(pfi)
+	updateStatus(psi)
+
+	workeri.SetStatus(shared.ComparatorStatusIdle)
+	d.Ping <- *shared.NewComparatorStatusUpdate(workeri.GetID().(string))
+
+	// Send the pair to the channel
 	d.channel <- pair
 
 }
@@ -122,106 +146,99 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 	}
 }
 
-func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool), worker *interfaces.Comparator[T]) func() (*shared.Connector[T], error) {
-	get_ready_result := func() (*shared.Connector[T], error) {
+func (d *Dispatcher[T]) getReadyResult(attr func() (*shared.Connector[T], bool), worker *interfaces.Comparator[T]) func() (*shared.Connector[T], error) {
+	return func() (*shared.Connector[T], error) {
+		d.MSG <- fmt.Sprintf("[INFO]: Awaiting new tasks to assign to %v...", (*worker).GetID())
 		res, ok := attr()
-		d.MSG <- fmt.Sprintf("[INFO]: Awaiting for new tasks to assign  %v ...", (*worker).GetID())
 		if !ok {
 			return nil, backoffError(ok, "No ready tasks")
 		}
 		return res, nil
 	}
-
-	return get_ready_result
 }
 
 func (d *Dispatcher[T]) Dispatch() {
 	go d.collectSelectorMessages()
 	defer deferPanic(&d.MSG)
+	defer close(d.channel)
+	wg := utils.NewWaitGroup(d.n)
 
-	wg := sync.WaitGroup{}
-	defer wg.Done()
-	wg.Add(d.n)
+	d.pool.mu.Lock()
 	for d.tcounter < d.n {
-		d.pool.mu.Lock()
 		worker := d.pool.Pop()
+
 		for len(d.pool.pq) > 0 && (*worker).TaskCount() >= d.cpw {
 			workeri := (*worker).(*shared.ComparatorModule[T])
 			workeri.SetStatus(shared.ComparatorStatusDone)
 			d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
-
 			worker = d.pool.Pop()
 		}
 
-		argue(len(d.pool.pq) > 0, "No available workers")
+		if len(d.pool.pq) == 0 {
+
+			for _, worker := range d.workers {
+				workeri := (*worker).(*shared.ComparatorModule[T])
+				workeri.SetStatus(shared.ComparatorStatusOverflow)
+				d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
+			}
+
+		}
+		argue(len(d.pool.pq) > 0, "All workers are overloaded.")
 
 		bo := backoff.NewExponentialBackOff()
-		bo.InitialInterval = 2 * time.Second
+		bo.InitialInterval = 3 * time.Second
 		opts := backoff.WithBackOff(bo)
-		pair, err := backoff.Retry(context.TODO(), d.get_ready_result(d.s.Next, worker), opts)
+		pair, err := backoff.Retry(context.TODO(), d.getReadyResult(d.s.Next, worker), opts)
 		if err != nil {
 			panic(err)
 		}
-		go d.assign(&wg, worker, pair)
+
+		go d.assign(wg, worker, pair)
 		pair.AssignieeId = (*worker).GetID().(string)
 		(*worker).Assigned()
 		d.pool.Push(*worker)
-		d.pool.mu.Unlock()
 		d.tcounter++
-
 	}
+
+	d.pool.mu.Unlock()
 	wg.Wait()
 	d.MSG <- fmt.Sprintf("[INFO]: Finished dispatching %d tasks", d.tcounter)
-	close(d.channel)
 
 }
 
 func (d *Dispatcher[T]) UpdateLeaderboard() {
 	count := 0
 	defer deferPanic(&d.MSG)
+	defer close(d.Ping)
+
 	for pair := range d.channel {
 		d.s.PrepareNeighbours(pair.Id)
 
-		pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
-		pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-		workeri := (*d.id2Worker[pair.AssignieeId]).(*shared.ComparatorModule[T])
-		if d.s.GetRemainingComparision(pair.F) == 0 {
-			pfi.SetStatus(shared.COMPLETED)
-		} else {
-			pfi.SetStatus(shared.PENDING)
-		}
-		d.Ping <- *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
+		pf := d.id2Item[pair.F]
+		ps := d.id2Item[pair.S]
 
-		if d.s.GetRemainingComparision(pair.S) == 0 {
-			psi.SetStatus(shared.COMPLETED)
-		} else {
-			psi.SetStatus(shared.PENDING)
-		}
-		d.Ping <- *shared.NewTaskStatusUpdate(psi.GetIndex().(string))
-
-		workeri.SetStatus(shared.ComparatorStatusIdle)
-		d.Ping <- *shared.NewComparatorStatusUpdate(workeri.GetID().(string))
-
-		res := (*pair).Order
+		res := pair.Order
 		argue(res != shared.NA, "Found Incomparable pairs")
+
 		if res == shared.GT {
-			pfv := (*pf).GetValue()
-			psv := (*ps).GetValue()
-			(*pf).SetValue(psv)
-			(*ps).SetValue(pfv)
+			pfValue := (*pf).GetValue()
+			psValue := (*ps).GetValue()
+			(*pf).SetValue(psValue)
+			(*ps).SetValue(pfValue)
 		}
-		count += 1
-		d.Ping <- *shared.NewLeaderboardUpdate((*pair).F, (*pair).S, (*pair).AssignieeId)
+
+		count++
+		d.Ping <- *shared.NewLeaderboardUpdate(pair.F, pair.S, pair.AssignieeId)
 	}
 
-	d.MSG <- fmt.Sprintf("[INFO] : %d tasks completed", count)
-	close(d.Ping)
+	d.MSG <- fmt.Sprintf("[INFO]: %d tasks completed", count)
 }
 
 func (d *Dispatcher[T]) GetLeaderboard() [](shared.Wire[T]) {
 	lb := make([]shared.Wire[T], len(d.lb))
 	for i, item := range d.lb {
-		lb[i] = *(item.(*shared.Wire[T]))
+		wireItem := item.(*shared.Wire[T])
+		lb[i] = *wireItem
 	}
 
 	return lb

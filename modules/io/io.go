@@ -79,7 +79,7 @@ func (io *IO[T]) ShowLeaderboard() {
 		cnt++
 
 	}
-	fmt.Println("[INFO]: Final Leaderboard. Number of std Updates:", cnt)
+	RegisterMessage("[INFO]: Final Result", io.verbose, &io.msgBuffer)
 	io.wg.Done()
 
 }

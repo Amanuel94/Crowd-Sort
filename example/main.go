@@ -12,8 +12,8 @@ import (
 
 func main() {
 
-	n_items := 15
-	n_cmps := 7
+	n_items := 4
+	n_cmps := 2
 	items := generateItems(n_items)
 	comparators := generateComparators(n_cmps)
 	io_cfg := io.NewConfig(items, comparators, 2)

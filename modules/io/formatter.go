@@ -15,7 +15,7 @@ import (
 func printTable[T any](_ []string, data []shared.Wire[T], p shared.PingMessage) {
 
 	defaultWriter := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.AlignRight)
-	fmt.Fprintln(defaultWriter, "\n\tLive Leaderboard")
+	fmt.Fprintln(defaultWriter, "\n\tLive Update")
 	fmt.Fprintln(defaultWriter, "\t----------------")
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.Debug)
