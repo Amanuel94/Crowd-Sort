@@ -2,14 +2,14 @@ package shared
 
 import (
 	"github.com/Amanuel94/crowdsort/interfaces"
-	"github.com/lithammer/shortuuid"
+	"github.com/Amanuel94/crowdsort/utils"
 
 	"golang.org/x/exp/constraints"
 )
 
 func NewWire[T any](value interfaces.Comparable[T]) interfaces.Comparable[T] {
 	return Wire[T]{
-		index:  shortuuid.New(),
+		index:  utils.NewIdentifier(),
 		value:  value,
 		status: PENDING,
 	}
@@ -38,8 +38,6 @@ func (item Wire[T]) GetStatus() Status {
 func (item *Wire[T]) SetStatus(status Status) {
 	item.status = status
 }
-
-// Wrapper for constrained types
 
 func (o *OrderedType[T]) GetIndex() any {
 	return o.index
@@ -85,11 +83,9 @@ func (ic ComparatorModule[T]) TaskCount() int {
 	return ic.task_cnt
 }
 
-// Constructor for Creating Comparator Modules
-
 func NewComparator[T any](cmp CmpFunc[T]) interfaces.Comparator[T] {
 	return &ComparatorModule[T]{
-		pid:      shortuuid.New(),
+		pid:      utils.NewIdentifier(),
 		cmp:      cmp,
 		task_cnt: 0,
 		status:   ComparatorStatusIdle,
@@ -97,7 +93,7 @@ func NewComparator[T any](cmp CmpFunc[T]) interfaces.Comparator[T] {
 }
 
 func NewConnector[T any](f string, s string) *Connector[T] {
-	return &Connector[T]{Id: shortuuid.New(), F: f, S: s, Order: NA}
+	return &Connector[T]{Id: utils.NewIdentifier(), F: f, S: s, Order: NA}
 }
 
 func (c *ComparatorModule[T]) SetStatus(s ComparatorStatus) {

@@ -6,6 +6,7 @@ import (
 	"iter"
 	"sync"
 
+	"github.com/lithammer/shortuuid"
 	"golang.org/x/exp/rand"
 )
 
@@ -88,4 +89,9 @@ func NewWaitGroup(n int) *sync.WaitGroup {
 	wg := sync.WaitGroup{}
 	wg.Add(n)
 	return &wg
+}
+
+// new ID
+func NewIdentifier() string {
+	return shortuuid.New()
 }

@@ -125,7 +125,7 @@ func (d *Dispatcher[T]) collectSelectorMessages() {
 func (d *Dispatcher[T]) get_ready_result(attr func() (*shared.Connector[T], bool), worker *interfaces.Comparator[T]) func() (*shared.Connector[T], error) {
 	get_ready_result := func() (*shared.Connector[T], error) {
 		res, ok := attr()
-		d.MSG <- fmt.Sprintf("[INFO]: Awaiting for new tasks to assign %v...", (*worker).GetID())
+		d.MSG <- fmt.Sprintf("[INFO]: Awaiting for new tasks to assign  %v ...", (*worker).GetID())
 		if !ok {
 			return nil, backoffError(ok, "No ready tasks")
 		}

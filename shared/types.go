@@ -7,8 +7,16 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// enum for score
-type Ord = int
+type Ord = int                 // order: <, >, =, =?
+type Status = string           // status of wire containing comparable items
+type ComparatorStatus = string // status of comparator module
+type MessageType = int         // type of ping message
+type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
+
+// Creates dynamically assigned status for wire.
+func Assigned(assignee string) Status {
+	return Status(fmt.Sprintf("ASSIGNED TO: %s", assignee))
+}
 
 const (
 	NA Ord = iota
@@ -16,14 +24,6 @@ const (
 	EQ
 	GT
 )
-
-type Status = string
-type MessageType = int
-type ComparatorStatus = string
-
-func Assigned(assignee string) Status {
-	return Status(fmt.Sprintf("ASSIGNED TO: %s", assignee))
-}
 
 const (
 	PENDING   Status = "PENDING"
@@ -43,16 +43,20 @@ const (
 	ComparatorStatusUpdate
 )
 
-// Wrapper for indexing items
+// Wire is a struct that contains a comparable item.
 type Wire[T any] struct {
 	index  string
 	value  interfaces.Comparable[T]
 	status Status
 }
+
+// A comparable wrapper for constrained types (int, float, etc.).
 type OrderedType[T constraints.Ordered] struct {
 	index any
 	value T
 }
+
+// A comparator wrapper for comparator
 type ComparatorModule[T any] struct {
 	pid      string
 	cmp      CmpFunc[T]
@@ -60,6 +64,7 @@ type ComparatorModule[T any] struct {
 	status   ComparatorStatus
 }
 
+// Contains  two comparables identified by the wires F and S
 type Connector[T any] struct {
 	Id          string
 	F           string
@@ -68,14 +73,13 @@ type Connector[T any] struct {
 	AssignieeId string
 }
 
-type CmpFunc[T any] func(*interfaces.Comparable[T], *interfaces.Comparable[T]) (int, error)
-
+// Not all fields are filled
 type PingMessage struct {
 	Type         MessageType
-	F            string // when the message is about leaderboard update
-	S            string // when the message is about leaderboard update
-	AssignieeId  string // when the message is about leaderboard update
-	WireId       string // when the message is about status update
-	WireStatus   Status // when the message is about status update
-	ComparatorId string // when the message is about status update
+	F            string // required when Type == LeaderboardUpdate
+	S            string // required when Type == LeaderboardUpdate
+	AssignieeId  string // required when Type == LeaderboardUpdate
+	WireId       string // required when Type == TaskStatusUpdate
+	WireStatus   Status // required when Type == TaskStatusUpdate
+	ComparatorId string // required when Type == ComparattorStatusUpdate
 }
