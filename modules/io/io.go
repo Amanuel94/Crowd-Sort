@@ -1,4 +1,3 @@
-// Handles side-effects
 package io
 
 import (
@@ -13,23 +12,26 @@ import (
 // Initalizes the IO module
 
 func New[T any](cfg *Config[T]) *IO[T] {
-	fmt.Println("[INFO]: Initializing IO")
-	newIO := &IO[T]{}
+	msgBuffer := make([]interface{}, 0)
+	RegisterMessage("[INFO]: Initializing IO", cfg.verbose, &msgBuffer)
+
 	items := utils.Map(func(v *interfaces.Comparable[T]) *shared.Wire[T] {
-		item := shared.NewWire[T](*v).(shared.Wire[T])
+		item := shared.NewWire(*v).(shared.Wire[T])
 		return &item
 	}, cfg.items)
-
 	comparators := utils.Map(func(v shared.CmpFunc[T]) *shared.ComparatorModule[T] {
-		return shared.NewComparator[T](v).(*shared.ComparatorModule[T])
+		return shared.NewComparator(v).(*shared.ComparatorModule[T])
 	}, cfg.comparators)
 
-	dcfg := dispatcher.IntDispatcherConfig(items, comparators)
-	newIO.d = dispatcher.New(dcfg)
-	newIO.msgBuffer = make([]interface{}, 0)
-	newIO.wg = utils.NewWaitGroup(2)
+	newIO := &IO[T]{}
 
-	fmt.Println("[INFO]: IO Initialized")
+	dcfg := dispatcher.NewDispatcherConfig(items, comparators)
+	newIO.d = dispatcher.New(dcfg)
+	newIO.msgBuffer = msgBuffer
+	newIO.wg = utils.NewWaitGroup(2)
+	newIO.verbose = cfg.verbose
+
+	RegisterMessage("[INFO]: IO Initialized", newIO.verbose, &newIO.msgBuffer)
 
 	return newIO
 }
@@ -67,7 +69,9 @@ func (io *IO[T]) ShowLeaderboard() {
 		if p.Type == shared.LeaderboardUpdate {
 			printUpdate(p)
 		}
-		// io.showCollectedMessages()
+		if io.verbose > 1 {
+			io.showCollectedMessages()
+		}
 		cnt++
 
 	}
@@ -76,13 +80,20 @@ func (io *IO[T]) ShowLeaderboard() {
 
 }
 
-// func (io *IO[T]) showCollectedMessages() {
-// 	for _, msg := range io.msgBuffer {
-// 		fmt.Println(msg)
-// 	}
-// }
+func (io *IO[T]) showCollectedMessages() {
+	for _, msg := range io.msgBuffer {
+		fmt.Println(msg)
+	}
+}
 
 func (io *IO[T]) Wait() {
 	io.wg.Wait()
 
+}
+
+func RegisterMessage(msg string, verbose int, msgBuffer *[]interface{}) {
+	if verbose > 0 {
+		fmt.Println(msg)
+		*msgBuffer = append(*msgBuffer, msg)
+	}
 }

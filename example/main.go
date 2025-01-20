@@ -16,7 +16,7 @@ func main() {
 	n_cmps := 7
 	items := generateItems(n_items)
 	comparators := generateComparators(n_cmps)
-	io_cfg := io.NewConfig(items, comparators)
+	io_cfg := io.NewConfig(items, comparators, 2)
 	io := io.New(io_cfg)
 	go io.StartDispatcher()
 	go io.ShowLeaderboard()

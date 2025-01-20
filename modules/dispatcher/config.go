@@ -21,7 +21,7 @@ type DispatcherConfig[T any] struct {
 	channel  chan *shared.Connector[T]
 }
 
-func IntDispatcherConfig[T any](items iter.Seq[*shared.Wire[T]], processes iter.Seq[*shared.ComparatorModule[T]]) *DispatcherConfig[T] {
+func NewDispatcherConfig[T any](items iter.Seq[*shared.Wire[T]], processes iter.Seq[*shared.ComparatorModule[T]]) *DispatcherConfig[T] {
 
 	lb := []any{}
 	rank := make(map[any]int)

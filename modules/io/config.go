@@ -7,16 +7,18 @@ import (
 	"github.com/Amanuel94/crowdsort/shared"
 )
 
-// TODO: Add options for  other I/O interfaces
+// TODO: Add options for other I/O interfaces
 type Config[T any] struct {
 	items       iter.Seq[*interfaces.Comparable[T]]
 	comparators iter.Seq[shared.CmpFunc[T]]
+	verbose     int
 }
 
-func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators iter.Seq[shared.CmpFunc[T]]) *Config[T] {
+func NewConfig[T any](items iter.Seq[*interfaces.Comparable[T]], comparators iter.Seq[shared.CmpFunc[T]], verbose int) *Config[T] {
 
 	return &Config[T]{
 		items:       items,
 		comparators: comparators,
+		verbose:     verbose,
 	}
 }
