@@ -4,21 +4,23 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/Amanuel94/crowdsort/interfaces"
 	"github.com/Amanuel94/crowdsort/shared"
 	"github.com/TreyBastian/colourize"
+	"github.com/kataras/tablewriter"
+	"github.com/lensesio/tableprinter"
 )
 
 func printTable[T any](_ []string, data []shared.Wire[T], p shared.PingMessage) {
 
-	defaultWriter := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.AlignRight)
-	fmt.Fprintln(defaultWriter, "\n\tLive Update")
-	fmt.Fprintln(defaultWriter, "\t----------------")
-
-	writer := tabwriter.NewWriter(os.Stdout, 0, 2, 10, ' ', tabwriter.Debug)
+	defaultWriter := tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', tabwriter.Debug)
+	fmt.Fprintln(defaultWriter, "\nLive Update")
+	newLine(1)
+	writer := tabwriter.NewWriter(os.Stdout, 0, 10, 3, ' ', tabwriter.Debug)
+	fmt.Fprintf(defaultWriter, "%s", fmt.Sprintf("   %s\t%s\t%s", "Wire", "Value|", "Status"))
+	fmt.Fprintln(defaultWriter)
 	for _, row := range data {
 		fmt.Fprintln(writer, formatRow(row, p))
 	}
@@ -44,18 +46,7 @@ func formatRow[T any](item shared.Wire[T], p shared.PingMessage) string {
 
 	}
 	stat := colourize.Colourize(item.GetStatus(), statColor)
-	return fmt.Sprintf("\t%s\t%s\t%s", s, v, stat)
-}
-
-func formatWorkerRow[T any](worker interfaces.Comparator[T]) string {
-	s := strings.TrimSpace(worker.GetID().(string))
-	workeri := worker.(*shared.ComparatorModule[T])
-	s = colourize.Colourize(s, colourize.White)
-	return fmt.Sprintf("%s\t%v\t%s\t", s, worker.TaskCount(), workeri.GetStatus())
-}
-
-func formatWorkerTitle(title []string) string {
-	return fmt.Sprintf("%s\t%v\t%s\t", title[0], title[1], title[2])
+	return fmt.Sprintf("   %s\t%s\t  \t%s", s, v, stat)
 }
 
 func printProgressBar(current, total int) {
@@ -90,18 +81,32 @@ func printUpdate(p shared.PingMessage) {
 	newLine(1)
 }
 
+type comparatorRow struct {
+	Comparator string `header:"Comparator"`
+	TaskCount  string `header:"Task Count"`
+	Status     string `header:"Status"`
+}
+
 func printWorkerStatusTable[T any](workers []*(interfaces.Comparator[T])) {
-	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 10, ' ', tabwriter.AlignRight)
 
-	// TODO: make this dynamic
-	fmt.Fprintln(writer, formatWorkerTitle([]string{repeat('-', 10), repeat('-', 10), repeat('-', 6)}))
-	fmt.Fprintln(writer, formatWorkerTitle([]string{"Comparator", "Task Count", "Status"}))
-	fmt.Fprintln(writer, formatWorkerTitle([]string{repeat('-', 10), repeat('-', 10), repeat('-', 6)}))
-
-	for _, row := range workers {
-		fmt.Fprintln(writer, formatWorkerRow(*row))
+	printer := tableprinter.New(os.Stdout)
+	tble := make([]comparatorRow, 0)
+	for _, worker := range workers {
+		row := comparatorRow{
+			Comparator: shared.AsModule(worker).GetID().(string),
+			TaskCount:  fmt.Sprintf("%v", shared.AsModule(worker).TaskCount()),
+			Status:     shared.AsModule(worker).GetStatus(),
+		}
+		tble = append(tble, row)
 	}
-	writer.Flush()
+
+	printer.BorderTop, printer.BorderLeft, printer.BorderRight = true, true, true
+	printer.CenterSeparator = " "
+	printer.ColumnSeparator = " "
+	printer.RowSeparator = "─"
+	printer.HeaderFgColor = tablewriter.FgGreenColor // set header foreground color for all headers.
+	printer.Print(tble)
+
 	newLine(2)
 
 }

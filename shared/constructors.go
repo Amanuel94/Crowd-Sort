@@ -130,3 +130,11 @@ func NewComparatorStatusUpdate(id string) *PingMessage {
 		ComparatorId: id,
 	}
 }
+
+func AsModule[T any](s *interfaces.Comparator[T]) *ComparatorModule[T] {
+	return (*s).(*ComparatorModule[T])
+}
+
+func AsWire[T any](s *interfaces.Comparable[T]) *Wire[T] {
+	return (*s).(*Wire[T])
+}

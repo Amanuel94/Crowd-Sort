@@ -89,7 +89,7 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-	workeri := asModule(worker)
+	workeri := shared.AsModule(worker)
 
 	d.MSG <- fmt.Sprintf("[INFO]: Assigning task to %s", (*worker).GetID())
 
@@ -139,8 +139,14 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	updateStatus(pfi)
 	updateStatus(psi)
 
-	workeri.SetStatus(shared.ComparatorStatusIdle)
-	d.Ping <- *shared.NewComparatorStatusUpdate(workeri.GetID().(string))
+	if (*worker).TaskCount() < d.cpw {
+		shared.AsModule(worker).SetStatus(shared.ComparatorStatusIdle)
+	} else if (*worker).TaskCount() == d.cpw {
+		shared.AsModule(worker).SetStatus(shared.ComparatorStatusDone)
+	} else {
+		shared.AsModule(worker).SetStatus(shared.ComparatorStatusOverflow)
+	}
+	d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
 
 	// Send the pair to the channel
 	d.channel <- pair
@@ -170,7 +176,7 @@ func (d *Dispatcher[T]) getWorker() (*interfaces.Comparator[T], error) {
 
 	for len(d.pool.pq) > 0 {
 		worker := d.pool.Pop()
-		workeri := asModule(worker)
+		workeri := shared.AsModule(worker)
 		if workeri.GetStatus() == shared.ComparatorStatusIdle {
 			idleWorker = worker
 			break
@@ -179,7 +185,7 @@ func (d *Dispatcher[T]) getWorker() (*interfaces.Comparator[T], error) {
 	}
 
 	for _, worker := range nonIdleWorkers {
-		workeri := asModule(worker)
+		workeri := shared.AsModule(worker)
 		if workeri.GetStatus() == shared.ComparatorStatusBusy {
 			d.pool.Push(workeri)
 		}
@@ -232,10 +238,6 @@ func (d *Dispatcher[T]) Dispatch() {
 		go d.assign(wg, worker, pair)
 		pair.AssignieeId = (*worker).GetID().(string)
 		(*worker).Assigned()
-		if (*worker).TaskCount() < d.cpw {
-			asModule(worker).SetStatus(shared.ComparatorStatusBusy)
-			d.Ping <- *shared.NewComparatorStatusUpdate((*worker).GetID().(string))
-		}
 		d.pool.Push(*worker)
 		d.tcounter++
 	}
@@ -258,12 +260,12 @@ func (d *Dispatcher[T]) UpdateLeaderboard() {
 		ps := d.id2Item[pair.S]
 
 		if (d.s.GetRemainingComparision(pair.F)) == 0 {
-			asWire(pf).SetStatus(shared.COMPLETED)
+			shared.AsWire(pf).SetStatus(shared.COMPLETED)
 			d.Ping <- *shared.NewTaskStatusUpdate(pair.F)
 		}
 
 		if (d.s.GetRemainingComparision(pair.S)) == 0 {
-			asWire(ps).SetStatus(shared.COMPLETED)
+			shared.AsWire(ps).SetStatus(shared.COMPLETED)
 			d.Ping <- *shared.NewTaskStatusUpdate(pair.S)
 		}
 
@@ -300,12 +302,4 @@ func (d *Dispatcher[T]) GetTaskCount() int {
 
 func (d *Dispatcher[T]) GetTotalTasks() int {
 	return d.n
-}
-
-func asModule[T any](s *interfaces.Comparator[T]) *shared.ComparatorModule[T] {
-	return (*s).(*shared.ComparatorModule[T])
-}
-
-func asWire[T any](s *interfaces.Comparable[T]) *shared.Wire[T] {
-	return (*s).(*shared.Wire[T])
 }
