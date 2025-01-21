@@ -89,7 +89,7 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 
 	pf, ps := d.id2Item[pair.F], d.id2Item[pair.S]
 	pfi, psi := (*pf).(*shared.Wire[T]), (*ps).(*shared.Wire[T])
-	workeri := shared.AsModule(worker)
+	// workeri := shared.AsModule(worker)
 
 	d.MSG <- fmt.Sprintf("[INFO]: Assigning task to %s", (*worker).GetID())
 
@@ -97,7 +97,7 @@ func (d *Dispatcher[T]) assign(wg *sync.WaitGroup, worker *interfaces.Comparator
 	statusMsg := shared.Assigned((*worker).GetID().(string))
 	pfi.SetStatus(statusMsg)
 	psi.SetStatus(statusMsg)
-	workeri.SetStatus(shared.ComparatorStatusBusy)
+	// workeri.SetStatus(shared.ComparatorStatusBusy)
 
 	// Send status updates
 	d.Ping <- *shared.NewTaskStatusUpdate(pfi.GetIndex().(string))
@@ -196,6 +196,7 @@ func (d *Dispatcher[T]) getWorker() (*interfaces.Comparator[T], error) {
 	}
 
 	if idleWorker != nil {
+		shared.AsModule(idleWorker).SetStatus(shared.ComparatorStatusBusy)
 		return idleWorker, nil
 	}
 
