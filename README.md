@@ -30,7 +30,7 @@ A sorting network consists of two main components:
 
 ![Source: Wikepedia ](https://upload.wikimedia.org/wikipedia/commons/e/e8/Sorting-network-comparator-demonstration.svg)
 
-A more detailed account on this subject has provided by Knuth in [The Art of Computer Programming Vol. 3](https://github.com/Amanuel94/math-dumps/blob/main/computer-science/The.Art.of.Computer.Programming.3.Sorting.and.Searching.pdf.1), Section 5.3.4.
+A more detailed account on this subject has provided by Knuth in [The Art of Computer Programming Vol. 3](https://github.com/Amanuel94/math-dumps/blob/main/computer-science/Books/The.Art.of.Computer.Programming.3.Sorting.and.Searching.pdf.1), Section 5.3.4.
 
 The overall process can be explained in a few steps.
 
