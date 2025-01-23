@@ -10,6 +10,7 @@ import (
 	"github.com/Amanuel94/crowdsort/utils"
 )
 
+// Example Usage of the crowdsort package
 func main() {
 
 	n_items := 10

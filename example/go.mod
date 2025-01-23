@@ -2,9 +2,7 @@ module example
 
 go 1.23.3
 
-replace github.com/Amanuel94/crowdsort => /home/dirichletian/crowd-sort
-
-require github.com/Amanuel94/crowdsort v0.0.0-20250117210954-89faa06434d9
+require github.com/Amanuel94/crowdsort v0.0.0-20250123141851-a2e5da9f511f
 
 require (
 	github.com/TreyBastian/colourize v0.0.0-20220718091059-2c32423e75f7 // indirect
