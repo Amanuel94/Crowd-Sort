@@ -66,7 +66,7 @@ CrowdSort can organize and prioritize tasks for crowd-sourced workforces, ensuri
 
 ## Example
 
-The example at the beginning shows how three comparators are assigned tasks of comparing items for sorting them from smallest to largest cocurrently while providing real-time information on the status of the comparators. The example simulates asynchronous behaviour by pausing the compartors' function for a random amount of time between 1 and 3 seconds. When the status of a wire is `COMPLETED`, it means the corresponding value is at the correct ranking. For demonstration purposes, numerical items are shown in example. However, the implementation was done having any [linearly ordered set](https://en.wikipedia.org/wiki/Total_order) of items in mind.
+The example at the beginning (whose implementation is shown [here](/example/main.go)) shows how three comparators are assigned tasks of comparing items for sorting them from smallest to largest cocurrently while providing real-time information on the status of the comparators. The example simulates asynchronous behaviour by pausing the compartors' function for a random amount of time between 1 and 3 seconds. When the status of a wire is `COMPLETED`, it means the corresponding value is at the correct ranking. For demonstration purposes, numerical items are shown in example. However, the implementation was done having any [linearly ordered set](https://en.wikipedia.org/wiki/Total_order) of items in mind.
 
 ## Usage
 
